@@ -37,22 +37,22 @@ SkillFit-AI/<br><br>
 ├── Main/<br>
 │   ├── Gemini_services/<br>
 │   │   └── gemini_services.py<br>
-|   |<br>
+│   │<br>
 │   ├── interfaces/  <br>
 │   │   ├── Recruiter.py<br>
 │   │   └── Candidate.py<br>
-|   |<br>
+│   │<br>
 │   ├── Web_Scrapping/  <br>
 │   │   ├── job_descriptions.csv<br>
 │   │   └── WebScrapping.ipynb<br>
-|   |<br>
+│   │<br>
 │   ├── .env  <br>
 │   ├── .gitignore <br>
 │   ├── app.py  <br>
 │   ├── auth.py <br>
 │   ├── database.py<br>
 │   ├── requirements.txt <br>
-|   |<br>
+│   │<br>
 ├── README.md <br>
 
 
