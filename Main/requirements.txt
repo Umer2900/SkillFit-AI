@@ -1,0 +1,10 @@
+streamlit
+pandas
+PyPDF2
+scikit-learn
+selenium
+webdriver-manager
+beautifulsoup4
+google-generativeai
+python-dotenv
+psycopg2-binary

@@ -1,0 +1,4 @@
+.env
+recruitment.db
+__pycache__/
+_venv/
