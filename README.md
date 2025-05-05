@@ -33,7 +33,7 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 
 ## Project Structure
 
-SkillFit-AI/<br><br>
+SkillFit-AI/<br>
 ├── Main/<br>
 │   ├── Gemini_services/<br>
 │   │   └── gemini_services.py<br>
@@ -52,7 +52,7 @@ SkillFit-AI/<br><br>
 │   ├── auth.py <br>
 │   ├── database.py<br>
 │   ├── requirements.txt <br>
-│   │<br>
+│<br>
 ├── README.md <br>
 
 
