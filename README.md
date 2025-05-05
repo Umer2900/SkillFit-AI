@@ -1,6 +1,7 @@
 # SkillFit AI – Ensures the Best Skill-to-Job Fit
 
 SkillFit AI is a Streamlit-based web application designed to streamline the recruitment process by leveraging AI to match skills to job requirements. It offers two primary interfaces: one for recruiters to analyze candidate resumes against job descriptions, and another for candidates to find job recommendations based on their resumes. Powered by the Gemini API, SkillFit AI provides intelligent parsing, comparison, and feedback to ensure the best skill-to-job fit.
+<br>
 
 ## Table of Contents
 - [Features](#features)
@@ -9,6 +10,7 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 - [Setup Instructions](#setup-instructions)
 - [Usage](#usage)
 
+<br>
 
 ## Features
 
@@ -27,28 +29,30 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 - **Account Management**: Users can log out or delete their accounts, including all associated data (e.g., saved resumes).
 - **AI-Powered**: Utilizes the Gemini API for intelligent text parsing and analysis.
 
+<br>
 
 ## Project Structure
 
-SkillFit-AI/<br>
+SkillFit-AI/<br><br>
 ├── Main/<br>
-│   ├── Gemini_services/          # Gemini API-related functions<br>
-│   │   └── gemini_services.py<br>
-│   ├── interfaces/              # Streamlit UI interfaces<br>
+│   ├── Gemini_services/<br>
+│   │   └── gemini_services.py<br><br>
+│   ├── interfaces/  <br>
 │   │   ├── Recruiter.py<br>
-│   │   └── Candidate.py<br>
-│   ├── Web_Scrapping/           # Web scraping scripts and data<br>
+│   │   └── Candidate.py<br><br>
+│   ├── Web_Scrapping/  <br>
 │   │   ├── job_descriptions.csv<br>
-│   │   └── WebScrapping.ipynb<br>
-│   ├── .env                     # Environment variables (not in repo)<br>
-│   ├── .gitignore               # Git ignore file<br>
-│   ├── app.py                   # Main Streamlit app entry point<br>
-│   ├── auth.py                  # Authentication logic<br>
-│   ├── database.py              # Database operations <br>
-│   ├── requirements.txt         # Project dependencies<br>
-├── README.md                    # Project documentation<br>
+│   │   └── WebScrapping.ipynb<br><br>
+│   ├── .env  <br>
+│   ├── .gitignore <br>
+│   ├── app.py  <br>
+│   ├── auth.py <br>
+│   ├── database.py<br>
+│   ├── requirements.txt <br><br>
+├── README.md <br>
 
 
+<br>
 
 ## Technologies Used
 - **Python 3.8+**: Core programming language.
@@ -57,6 +61,8 @@ SkillFit-AI/<br>
 - **Pandas & Scikit-Learn**: For job recommendation logic (TF-IDF, cosine similarity).
 - **PyPDF2**: For extracting text from PDF resumes.
 - **python-dotenv**: For managing environment variables.
+
+<br>
 
 ## Setup Instructions
 
@@ -81,7 +87,7 @@ SkillFit-AI/<br>
 
 3. **Install Dependencies**:
    ```
-   pip install -r requirements.txt```
+   pip install -r requirements.txt
 
 4. **Configure Environment Variables**:
 * Create a .env file in the root directory.
@@ -90,9 +96,10 @@ GEMINI_API_KEY=your-api-key-here
 
 5. **Run the Application**:
    ```
-   streamlit run app.py```
+   streamlit run app.py
 
 
+<br>
 
 ## Usage
 
