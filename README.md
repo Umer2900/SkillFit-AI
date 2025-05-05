@@ -8,8 +8,7 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 - [Technologies Used](#technologies-used)
 - [Setup Instructions](#setup-instructions)
 - [Usage](#usage)
-- [Deployment](#deployment)
-- [Future Improvements](#future-improvements)
+
 
 ## Features
 
@@ -31,24 +30,23 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 
 ## Project Structure
 
-SkillFit-AI/
-├── Main/
-│   ├── Gemini_services/          # Gemini API-related functions
-│   │   └── gemini_services.py
-│   ├── interfaces/              # Streamlit UI interfaces
-│   │   ├── Recruiter.py
-│   │   └── Candidate.py
-│   ├── Web_Scrapping/           # Web scraping scripts and data
-│   │   ├── job_descriptions.csv
-│   │   └── WebScrapping.ipynb
-│   ├── .env                     # Environment variables (not in repo)
-│   ├── .gitignore               # Git ignore file
-│   ├── app.py                   # Main Streamlit app entry point
-│   ├── auth.py                  # Authentication logic
-│   ├── database.py              # Database operations 
-│   ├── requirements.txt         # Project dependencies
-│   └── LICENSE                  # MIT License
-├── README.md                    # Project documentation
+SkillFit-AI/<br>
+├── Main/<br>
+│   ├── Gemini_services/          # Gemini API-related functions<br>
+│   │   └── gemini_services.py<br>
+│   ├── interfaces/              # Streamlit UI interfaces<br>
+│   │   ├── Recruiter.py<br>
+│   │   └── Candidate.py<br>
+│   ├── Web_Scrapping/           # Web scraping scripts and data<br>
+│   │   ├── job_descriptions.csv<br>
+│   │   └── WebScrapping.ipynb<br>
+│   ├── .env                     # Environment variables (not in repo)<br>
+│   ├── .gitignore               # Git ignore file<br>
+│   ├── app.py                   # Main Streamlit app entry point<br>
+│   ├── auth.py                  # Authentication logic<br>
+│   ├── database.py              # Database operations <br>
+│   ├── requirements.txt         # Project dependencies<br>
+├── README.md                    # Project documentation<br>
 
 
 
@@ -70,17 +68,20 @@ SkillFit-AI/
 
 ### Steps
 1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-username/SkillFit-AI.git
+   ```
+   bash
+   git clone https://github.com/Umer2900/SkillFit-AI.git
    cd SkillFit-AI
 
 
 2. **Set Up a Virtual Environment**:
-   ```python -m venv venv
+   ```
+   python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 3. **Install Dependencies**:
-   ```pip install -r requirements.txt```
+   ```
+   pip install -r requirements.txt```
 
 4. **Configure Environment Variables**:
 * Create a .env file in the root directory.
@@ -88,7 +89,8 @@ SkillFit-AI/
 GEMINI_API_KEY=your-api-key-here
 
 5. **Run the Application**:
-   ```streamlit run app.py
+   ```
+   streamlit run app.py```
 
 
 
