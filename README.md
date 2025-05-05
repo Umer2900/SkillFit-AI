@@ -36,19 +36,23 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 SkillFit-AI/<br><br>
 ├── Main/<br>
 │   ├── Gemini_services/<br>
-│   │   └── gemini_services.py<br><br>
+│   │   └── gemini_services.py<br>
+|   |<br>
 │   ├── interfaces/  <br>
 │   │   ├── Recruiter.py<br>
-│   │   └── Candidate.py<br><br>
+│   │   └── Candidate.py<br>
+|   |<br>
 │   ├── Web_Scrapping/  <br>
 │   │   ├── job_descriptions.csv<br>
-│   │   └── WebScrapping.ipynb<br><br>
+│   │   └── WebScrapping.ipynb<br>
+|   |<br>
 │   ├── .env  <br>
 │   ├── .gitignore <br>
 │   ├── app.py  <br>
 │   ├── auth.py <br>
 │   ├── database.py<br>
-│   ├── requirements.txt <br><br>
+│   ├── requirements.txt <br>
+|   |<br>
 ├── README.md <br>
 
 
@@ -71,6 +75,7 @@ SkillFit-AI/<br><br>
 - Git
 - A Gemini API key (obtain from [Google AI](https://ai.google.dev/))
 
+<br>
 
 ### Steps
 1. **Clone the Repository**:
@@ -93,6 +98,8 @@ SkillFit-AI/<br><br>
 * Create a .env file in the root directory.
 * Add your Gemini API key:
 GEMINI_API_KEY=your-api-key-here
+
+<br>
 
 5. **Run the Application**:
    ```
