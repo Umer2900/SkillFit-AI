@@ -37,7 +37,7 @@ def candidate_interface():
         st.title("Candidate Homepage")
         st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
         st.markdown("""
-        ### Your Journey to the Perfect Job Starts Here
+        ### Your Journey to the Perfect Job Starts Here. 
 
         As a candidate, you're on a mission to find a job that matches your skills, experience, and aspirations. **SkillFit AI** is here to help you every step of the way! Powered by the Gemini API, our platform uses advanced AI to analyze your resume and recommend the best job opportunities tailored just for you. Say goodbye to endless job searches—let us do the heavy lifting while you focus on landing your dream role.
 
@@ -70,7 +70,7 @@ def candidate_interface():
         parsed_resume_text = ""
 
         if uploaded_file is not None:
-            # Extract raw text from the uploaded PDF
+            # Extract RAW text from the uploaded PDF
             resume_text = pdf_to_text(uploaded_file)
 
             # Parse the resume text using Gemini API
