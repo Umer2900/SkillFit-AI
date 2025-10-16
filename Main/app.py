@@ -8,7 +8,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 import streamlit as st
 from PyPDF2 import PdfReader
 # from Gemini_services import get_gemini_response, input_pdf_text
-from Gemini_services.gemini_services import get_gemini_response, input_pdf_text
+from Gemini_services.services import get_gemini_response, input_pdf_text
+
 from auth import login_user, signup_user
 from database import supabase_client
 

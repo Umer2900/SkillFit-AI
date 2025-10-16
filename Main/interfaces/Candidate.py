@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from database import save_resume, get_user_resumes, delete_account
 from datetime import datetime
-from Gemini_services.gemini_services import parse_resume_for_candidate
+from Gemini_services.services import parse_resume_for_candidate
 
 # Function to convert PDF to text
 def pdf_to_text(file):

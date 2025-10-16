@@ -3,7 +3,7 @@ import PyPDF2
 from database import save_resume, get_user_resumes, download_resume, clear_resumes, delete_account
 from datetime import datetime
 from io import BytesIO
-from Gemini_services.gemini_services import parse_job_description, parse_resume_for_recruiter, compare_job_and_resume, feedback_parse
+from Gemini_services.services import parse_job_description, parse_resume_for_recruiter, compare_job_and_resume, feedback_parse
 
 # Helper function to extract text from a PDF
 def pdf_to_text(pdf_file):
