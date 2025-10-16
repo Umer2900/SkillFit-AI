@@ -34,7 +34,8 @@ def send_verification_email(email, code):
     try:
         msg = MIMEText(f"Your verification code is: {code}")
         msg['Subject'] = 'Verify Your Email'
-        # msg['From'] = environ.get('GMAIL_USER')           # to pull secrets from Streamlit's manager instead of the environment.
+        # msg['From'] = environ.get('GMAIL_USER')           
+        msg['From'] = st.secrets["GMAIL_USER"]          # to pull secrets from Streamlit's manager instead of the environment.
         msg['To'] = email
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             # server.login(environ.get('GMAIL_USER'), environ.get('GMAIL_APP_PASSWORD'))
