@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 import PyPDF2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -16,7 +17,12 @@ def pdf_to_text(file):
     return text
 
 # Load the dataset
-df = pd.read_csv("Web_Scrapping/job_descriptions.csv")
+# df = pd.read_csv("Web_Scrapping/job_descriptions.csv")
+# get absolute path to project root (one level above 'Main')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "job_descriptions.csv")
+df = pd.read_csv(CSV_PATH)
+
 df.fillna("", inplace=True)
 
 # Combine JobRole, Experience, and Skills to form job_description
