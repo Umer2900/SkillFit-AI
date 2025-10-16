@@ -1,17 +1,18 @@
 from dotenv import load_dotenv
 import os
 import google.generativeai as genai
+import streamlit as st
 
 # Load the environment variables from the .env file
 load_dotenv()
 
 # Get the API key from the environment variable
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]           # REPLACEMENT CODE (for Streamlit Cloud)
 
 # Configure Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 # Function to parse job description (from Recruiter.py)

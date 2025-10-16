@@ -8,7 +8,7 @@ import random
 import string
 import smtplib
 from email.mime.text import MIMEText
-from os import environ
+# from os import environ
 
 # Initialize database
 init_db()
@@ -34,10 +34,11 @@ def send_verification_email(email, code):
     try:
         msg = MIMEText(f"Your verification code is: {code}")
         msg['Subject'] = 'Verify Your Email'
-        msg['From'] = environ.get('GMAIL_USER')
+        # msg['From'] = environ.get('GMAIL_USER')           # to pull secrets from Streamlit's manager instead of the environment.
         msg['To'] = email
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(environ.get('GMAIL_USER'), environ.get('GMAIL_APP_PASSWORD'))
+            # server.login(environ.get('GMAIL_USER'), environ.get('GMAIL_APP_PASSWORD'))
+            server.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
             server.send_message(msg)
         return True
     except Exception as e:
