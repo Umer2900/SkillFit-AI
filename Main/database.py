@@ -12,18 +12,8 @@ key = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc
 supabase: Client = create_client(url, key)
 
 def init_db():
-    # Create tables if they don't exist
-    supabase.table("users").create(
-        {"id": "SERIAL PRIMARY KEY", "email": "TEXT", "username": "TEXT", "password": "TEXT", "user_type": "TEXT", "created_at": "TIMESTAMP"},
-        {"if_not_exists": True}
-    ).execute()
-    supabase.table("resumes").create(
-        {"id": "SERIAL PRIMARY KEY", "user_id": "INTEGER", "filename": "TEXT", "file_content": "BYTEA", "upload_date": "TIMESTAMP", "analysis": "TEXT"},
-        {"if_not_exists": True}
-    ).execute()
-
-# Initialize the database when the module is imported
-init_db()
+    # No table creation here; assume tables are created in Supabase dashboard
+    pass
 
 def save_resume(user_id, file):
     filename = file.name
@@ -54,8 +44,6 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
-
-
 
 
 # import sqlite3
