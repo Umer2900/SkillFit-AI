@@ -1,5 +1,4 @@
 from supabase import create_client, Client
-import base64
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -22,12 +21,12 @@ def init_db():
 
 def save_resume(user_id, file):
     filename = file.name
-    file_content = base64.b64encode(file.getvalue()).decode('utf-8')  # Encode bytes to base64 string
+    file_content = file.getvalue()  # Raw bytes, no base64 encoding
     upload_date = datetime.now().isoformat()  # Convert to ISO string for JSON serialization
     supabase.table("resumes").insert({
         "user_id": user_id,
         "filename": filename,
-        "file_content": file_content,
+        "file_content": file_content,  # Pass raw bytes for BYTEA column
         "upload_date": upload_date
     }).execute()
 
@@ -36,9 +35,9 @@ def get_user_resumes(user_id):
     resumes = response.data
     parsed_resumes = []
     for resume in resumes:
-        # Debug: Check the raw file_content before decoding
+        # Debug: Check the raw file_content before processing
         print(f"Raw file_content length: {len(resume['file_content'])}, sample: {resume['file_content'][:10]}")
-        file_content = base64.b64decode(resume["file_content"]) if resume["file_content"] else None
+        file_content = resume["file_content"]  # Already bytes from BYTEA, no decoding needed
         parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
     return parsed_resumes
 
@@ -46,7 +45,7 @@ def download_resume(resume_id):
     response = supabase.table("resumes").select("filename, file_content").eq("id", resume_id).execute()
     data = response.data
     if data:
-        file_content = base64.b64decode(data[0]["file_content"]) if data[0]["file_content"] else None
+        file_content = data[0]["file_content"]  # Already bytes from BYTEA
         return data[0]["filename"], file_content
     return None, None
 
@@ -56,6 +55,10 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
+
+
+
+
 
 # import sqlite3
 # from datetime import datetime
