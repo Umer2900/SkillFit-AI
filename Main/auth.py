@@ -36,11 +36,10 @@ def create_user(username, email, password, user_type):
         "email": email,
         "password": hashed_password,
         "user_type": user_type,
-        "created_at": datetime.now()
+        "created_at": datetime.now().isoformat()
     }).execute()
     print(f"Created user: {username}, {email}, {user_type}")
     return True
-
 
 
 # import sqlite3
