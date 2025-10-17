@@ -21,13 +21,13 @@ def init_db():
 
 def save_resume(user_id, file):
     filename = file.name
-    file_content = file.getvalue()
-    supabase.table("resumes").insert({
-        "user_id": user_id,
-        "filename": filename,
-        "file_content": file_content,
-        "upload_date": datetime.now()
-    }).execute()
+    file_content = file.getvalue()  # This returns bytes
+    upload_date = datetime.now().isoformat()  # Convert to ISO string for JSON serialization
+    # Use data parameter for binary content and json for other fields
+    supabase.table("resumes").insert(
+        data={"user_id": user_id, "filename": filename, "upload_date": upload_date},
+        files={"file_content": file_content}
+    ).execute()
 
 def get_user_resumes(user_id):
     response = supabase.table("resumes").select("*").eq("user_id", user_id).execute()
@@ -48,6 +48,8 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
+
+
 
 # import sqlite3
 # from datetime import datetime
