@@ -55,10 +55,10 @@ def main():
                     user = check_credentials(email, password)
                     if user:
                         st.session_state.user = {
-                            'id': user[0],
-                            'email': user[1],
-                            'username': user[2],
-                            'user_type': user[4]
+                            'id': user['id'],
+                            'email': user['email'],
+                            'username': user['username'],
+                            'user_type': user['user_type']
                         }
                         st.success("Logged in successfully!")
                         st.rerun()
@@ -140,7 +140,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 # # import sys
