@@ -36,7 +36,8 @@ def get_user_resumes(user_id):
     resumes = response.data
     parsed_resumes = []
     for resume in resumes:
-        # Decode base64 back to bytes if needed for display/download
+        # Debug: Check the raw file_content before decoding
+        print(f"Raw file_content length: {len(resume['file_content'])}, sample: {resume['file_content'][:10]}")
         file_content = base64.b64decode(resume["file_content"]) if resume["file_content"] else None
         parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
     return parsed_resumes
@@ -55,7 +56,6 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
-
 
 # import sqlite3
 # from datetime import datetime
