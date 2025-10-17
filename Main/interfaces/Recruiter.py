@@ -177,11 +177,8 @@ def recruiter_interface():
                             try:
                                 save_resume(st.session_state.user['id'], st.session_state.resume_file)
                                 st.success(f"Resume '{st.session_state.resume_filename}' saved to Liked Resume.")
-                                # Refresh liked resumes
-                                st.session_state.resume_file = None  # Clear after save
-                                st.rerun()
                             except Exception as e:
-                                st.error(f"Failed to save resume: {str(e)}. Please try again or check logs.")
+                                st.error(f"Failed to save resume: {str(e)}")
                     else:
                         st.error("No resume uploaded to save.")
 
@@ -193,10 +190,12 @@ def recruiter_interface():
             for resume in resumes:
                 content = resume[3]  # file_content BLOB
                 upload_date = resume[2]
-                upload_date = datetime.strptime(upload_date, "%Y-%m-%dT%H:%M:%S.%f")
+                # Convert string to datetime object
+                upload_date = datetime.strptime(upload_date, "%Y-%m-%d %H:%M:%S.%f")
                 formatted_date = upload_date.strftime("%Y-%m-%d at %I:%M %p")
                 st.subheader(resume[1])  # filename
                 st.write(f"Saved on: {formatted_date}")
+                # Provide download button for the file
                 file_bytes = BytesIO(content)
                 st.download_button(
                     label="Download Resume",
@@ -206,9 +205,11 @@ def recruiter_interface():
                 if resume[4]:  # analysis
                     st.write("Analysis:", resume[4])
 
+            # Add Clear button to remove all resumes
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Clear"):
+                    # Clear all resumes for the current user from the database
                     clear_resumes(st.session_state.user['id'])
                     st.success("All liked resumes have been cleared!")
                     st.rerun()

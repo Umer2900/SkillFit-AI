@@ -18,8 +18,6 @@ key = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc
 supabase: Client = create_client(url, key)
 
 def init_db():
-    # Initial delay to allow connection to stabilize
-    time.sleep(2)
     # Enhanced retry logic for transient errors
     max_retries = 5
     for attempt in range(max_retries):
@@ -32,27 +30,22 @@ def init_db():
         except Exception as e:
             logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
             if attempt < max_retries - 1:
-                wait_time = 2 ** (attempt + 1)  # Exponential backoff: 4s, 8s, 16s, 32s, 64s
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s, 8s, 16s
                 logger.info(f"Retrying in {wait_time} seconds...")
                 time.sleep(wait_time)
                 continue
-            logger.warning("Database initialization failed after retries. Proceeding with potential limited functionality.")
-            return  # Graceful failure, allow app to start
+            raise Exception("Database initialization failed: Tables 'users' or 'resumes' are missing or misconfigured. Please create them in the Supabase dashboard with the correct schema: 'users' (id, email, username, password, user_type, created_at) and 'resumes' (id, user_id, filename, file_content, upload_date, analysis).")
 
 def save_resume(user_id, file):
     filename = file.name
     file_content = file.getvalue()  # Raw bytes for BYTEA column
     upload_date = datetime.now().isoformat()
-    try:
-        supabase.table("resumes").insert({
-            "user_id": user_id,
-            "filename": filename,
-            "file_content": file_content,
-            "upload_date": upload_date
-        }).execute()
-    except Exception as e:
-        logger.error(f"Failed to save resume: {str(e)}")
-        raise
+    supabase.table("resumes").insert({
+        "user_id": user_id,
+        "filename": filename,
+        "file_content": file_content,
+        "upload_date": upload_date
+    }).execute()
 
 def get_user_resumes(user_id):
     response = supabase.table("resumes").select("*").eq("user_id", user_id).execute()
@@ -78,6 +71,7 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
+
 
 
 
