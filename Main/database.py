@@ -2,6 +2,7 @@ from supabase import create_client, Client
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import time
 
 # Load environment variables from Streamlit secrets
 load_dotenv()
@@ -12,21 +13,27 @@ key = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc
 supabase: Client = create_client(url, key)
 
 def init_db():
-    # Health check to ensure tables exist
-    try:
-        supabase.table("users").select("id").limit(1).execute()
-        supabase.table("resumes").select("id").limit(1).execute()
-    except Exception as e:
-        raise Exception("Database initialization failed: Tables 'users' or 'resumes' are missing or misconfigured. Please create them in the Supabase dashboard with the correct schema: 'users' (id, email, username, password, user_type, created_at) and 'resumes' (id, user_id, filename, file_content, upload_date, analysis).")
+    # Retry logic for transient errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            supabase.table("users").select("id").limit(1).execute()
+            supabase.table("resumes").select("id").limit(1).execute()
+            return  # Exit if successful
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
+                continue
+            raise Exception("Database initialization failed: Tables 'users' or 'resumes' are missing or misconfigured. Please create them in the Supabase dashboard with the correct schema: 'users' (id, email, username, password, user_type, created_at) and 'resumes' (id, user_id, filename, file_content, upload_date, analysis).")
 
 def save_resume(user_id, file):
     filename = file.name
-    file_content = file.getvalue()  # Raw bytes, no base64 encoding
-    upload_date = datetime.now().isoformat()  # Convert to ISO string for JSON serialization
+    file_content = file.getvalue()  # Raw bytes for BYTEA column
+    upload_date = datetime.now().isoformat()
     supabase.table("resumes").insert({
         "user_id": user_id,
         "filename": filename,
-        "file_content": file_content,  # Pass raw bytes for BYTEA column
+        "file_content": file_content,
         "upload_date": upload_date
     }).execute()
 
@@ -35,9 +42,8 @@ def get_user_resumes(user_id):
     resumes = response.data
     parsed_resumes = []
     for resume in resumes:
-        # Debug: Check the raw file_content before processing
         print(f"Raw file_content length: {len(resume['file_content'])}, sample: {resume['file_content'][:10]}")
-        file_content = resume["file_content"]  # Already bytes from BYTEA, no decoding needed
+        file_content = resume["file_content"]  # Already bytes from BYTEA
         parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
     return parsed_resumes
 
@@ -55,7 +61,6 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
-
 
 
 
