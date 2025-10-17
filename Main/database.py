@@ -1,4 +1,5 @@
 from supabase import create_client, Client
+import base64
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -21,25 +22,31 @@ def init_db():
 
 def save_resume(user_id, file):
     filename = file.name
-    file_content = file.getvalue()  # This returns bytes
+    file_content = base64.b64encode(file.getvalue()).decode('utf-8')  # Encode bytes to base64 string
     upload_date = datetime.now().isoformat()  # Convert to ISO string for JSON serialization
-    # Use data parameter for binary content and json for other fields
-    supabase.table("resumes").insert(
-        data={"user_id": user_id, "filename": filename, "upload_date": upload_date},
-        files={"file_content": file_content}
-    ).execute()
+    supabase.table("resumes").insert({
+        "user_id": user_id,
+        "filename": filename,
+        "file_content": file_content,
+        "upload_date": upload_date
+    }).execute()
 
 def get_user_resumes(user_id):
     response = supabase.table("resumes").select("*").eq("user_id", user_id).execute()
     resumes = response.data
-    parsed_resumes = [(resume["id"], resume["filename"], resume["upload_date"], resume["file_content"], resume["analysis"]) for resume in resumes]
+    parsed_resumes = []
+    for resume in resumes:
+        # Decode base64 back to bytes if needed for display/download
+        file_content = base64.b64decode(resume["file_content"]) if resume["file_content"] else None
+        parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
     return parsed_resumes
 
 def download_resume(resume_id):
     response = supabase.table("resumes").select("filename, file_content").eq("id", resume_id).execute()
     data = response.data
     if data:
-        return data[0]["filename"], data[0]["file_content"]
+        file_content = base64.b64decode(data[0]["file_content"]) if data[0]["file_content"] else None
+        return data[0]["filename"], file_content
     return None, None
 
 def clear_resumes(user_id):
@@ -48,7 +55,6 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
-
 
 
 # import sqlite3
