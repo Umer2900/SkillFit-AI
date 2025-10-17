@@ -12,8 +12,12 @@ key = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc
 supabase: Client = create_client(url, key)
 
 def init_db():
-    # No table creation here; assume tables are created in Supabase dashboard
-    pass
+    # Health check to ensure tables exist
+    try:
+        supabase.table("users").select("id").limit(1).execute()
+        supabase.table("resumes").select("id").limit(1).execute()
+    except Exception as e:
+        raise Exception("Database initialization failed: Tables 'users' or 'resumes' are missing or misconfigured. Please create them in the Supabase dashboard with the correct schema: 'users' (id, email, username, password, user_type, created_at) and 'resumes' (id, user_id, filename, file_content, upload_date, analysis).")
 
 def save_resume(user_id, file):
     filename = file.name
@@ -44,7 +48,6 @@ def clear_resumes(user_id):
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
     supabase.table("users").delete().eq("id", user_id).execute()
-
 
 # import sqlite3
 # from datetime import datetime

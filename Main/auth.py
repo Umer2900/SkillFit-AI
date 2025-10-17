@@ -17,14 +17,19 @@ def hash_password(password):
 
 def check_credentials(email, password):
     hashed_password = hash_password(password)
+    print(f"Checking credentials for email: {email}, hashed password: {hashed_password[:10]}...")
     response = supabase.table("users").select("*").eq("email", email).eq("password", hashed_password).execute()
+    print(f"Query response: {response.data}")
     data = response.data
     return data[0] if data else None
 
 def create_user(username, email, password, user_type):
     hashed_password = hash_password(password)
+    print(f"Checking for existing user with email: {email}, user_type: {user_type}")
     response = supabase.table("users").select("email").eq("email", email).eq("user_type", user_type).execute()
+    print(f"Existing user check response: {response.data}")
     if response.data:
+        print(f"User with email {email} and user_type {user_type} already exists")
         return False
     supabase.table("users").insert({
         "username": username,
@@ -33,6 +38,7 @@ def create_user(username, email, password, user_type):
         "user_type": user_type,
         "created_at": datetime.now()
     }).execute()
+    print(f"Created user: {username}, {email}, {user_type}")
     return True
 
 
