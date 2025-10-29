@@ -379,7 +379,7 @@ def recruiter_interface():
             # === CLEAR BUTTON – AT THE VERY END ===
             st.markdown("---")
             # col_left, col_right = st.columns([5, 1])
-            col_left, col_right = st.columns([1, 5])
+            col_left, col_right = st.columns([0, 5])
             with col_right:
                 if st.button("Clear", type="secondary", key="clear_results_final"):
                     # Reset ALL session state
