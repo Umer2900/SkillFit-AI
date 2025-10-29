@@ -379,13 +379,22 @@ def recruiter_interface():
             # === CLEAR BUTTON – AT THE VERY END ===
             st.markdown("---")
             # col_left, col_right = st.columns([5, 1])
-            col_left, col_right = st.columns([0, 5])
+            # with col_right:
+            #     if st.button("Clear", type="secondary", key="clear_results_final"):
+            #         # Reset ALL session state
+            #         st.session_state.bulk_job_description = ""
+            #         st.session_state.bulk_zip_file = None
+            #         st.session_state.bulk_results = None
+            #         st.rerun()
+            
+            col_right = st.columns(1)
             with col_right:
-                if st.button("Clear", type="secondary", key="clear_results_final"):
-                    # Reset ALL session state
-                    st.session_state.bulk_job_description = ""
-                    st.session_state.bulk_zip_file = None
-                    st.session_state.bulk_results = None
+                if st.button("Clear"):
+                    st.session_state.job_description = ""
+                    st.session_state.resume_file = None
+                    st.session_state.analysis_results = {"job_desc": None, "resume": None,
+                                                       "comparison": None, "feedback": None}
+                    st.session_state.uploader_key += 1
                     st.rerun()
 
 
