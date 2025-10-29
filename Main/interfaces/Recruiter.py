@@ -1,11 +1,14 @@
 # interfaces/Recruiter.py
 import streamlit as st
 import PyPDF2
-import zipfile
 import io
+
+import zipfile
 import re
+from tqdm import tqdm  # optional, only if you want fancy progress
 from datetime import datetime
 from io import BytesIO
+
 from database import (
     save_resume, get_user_resumes, download_resume,
     clear_resumes, delete_account
@@ -32,64 +35,86 @@ def txt_to_text(txt_file) -> str:
     return txt_file.read().decode("utf-8")
 
 # ----------------------------------------------------------------------
-# Bulk-screening logic
+# BULK SCREENING WITH JOB DESCRIPTION
 # ----------------------------------------------------------------------
-def screen_bulk_resumes(zip_bytes: bytes, user_id: int):
+def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
     """
     Returns:
-        filtered_zip_bytes (bytes) – ZIP with only resumes ≥7/10
-        summary (list of dicts)   – [{filename, rating, raw_gemini}]
+        filtered_zip_bytes (bytes)
+        summary (list of dicts): [{filename, rating, status, raw_gemini}]
     """
     summary = []
     filtered_files = {}
+    job_desc_parsed = parse_job_description(job_description)  # Extract JD
 
     with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zip_ref:
-        for file_name in zip_ref.namelist():
-            # Skip directories / hidden files
+        total_files = len([n for n in zip_ref.namelist() if not n.startswith("__") and n.lower().endswith(('.pdf', '.txt'))])
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+
+        for idx, file_name in enumerate(zip_ref.namelist()):
             if file_name.startswith("__") or file_name.endswith("/"):
                 continue
+            if not file_name.lower().endswith(('.pdf', '.txt')):
+                continue
+
+            status_text.text(f"Processing: {file_name} ({idx+1}/{total_files})")
 
             with zip_ref.open(file_name) as f:
                 file_bytes = f.read()
                 file_obj = io.BytesIO(file_bytes)
 
-                # ---- read text ------------------------------------------------
-                if file_name.lower().endswith(".pdf"):
-                    resume_text = pdf_to_text(file_obj)
-                elif file_name.lower().endswith(".txt"):
-                    resume_text = txt_to_text(file_obj)
-                else:
-                    summary.append({"filename": file_name, "rating": "N/A", "raw": "Unsupported format"})
-                    continue
-
-                # ---- Gemini parsing -------------------------------------------
+                # Extract text
                 try:
-                    gemini_output = parse_resume_for_recruiter(resume_text)
+                    if file_name.lower().endswith(".pdf"):
+                        resume_text = pdf_to_text(file_obj)
+                    else:
+                        resume_text = txt_to_text(file_obj)
                 except Exception as e:
-                    summary.append({"filename": file_name, "rating": "Error", "raw": str(e)})
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": str(e)})
                     continue
 
-                # ---- extract rating (e.g. "8/10") -----------------------------
-                rating_match = re.search(r"Rating:\s*(\d+)/10", gemini_output)
+                # Parse resume
+                try:
+                    resume_parsed = parse_resume_for_recruiter(resume_text)
+                except Exception as e:
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": f"Gemini parse error: {e}"})
+                    continue
+
+                # Compare with job description
+                try:
+                    comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
+                except Exception as e:
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": f"Comparison error: {e}"})
+                    continue
+
+                # Extract rating
+                rating_match = re.search(r"Rating:\s*(\d+)/10", comparison)
                 rating = int(rating_match.group(1)) if rating_match else None
 
+                status = "Passed" if rating and rating >= 7 else "Rejected"
                 summary.append({
                     "filename": file_name,
-                    "rating": rating if rating is not None else "N/A",
-                    "raw": gemini_output
+                    "rating": f"{rating}/10" if rating else "N/A",
+                    "status": status,
+                    "raw": comparison
                 })
 
-                # ---- keep if ≥7 ------------------------------------------------
-                if rating and rating >= 7:
+                # Keep if passed
+                if status == "Passed":
                     filtered_files[file_name] = file_bytes
-
-                    # OPTIONAL: also store in DB (same as “Save” button)
+                    # Optional: auto-save to Liked Resume
                     try:
                         save_resume(user_id, io.BytesIO(file_bytes))
                     except Exception as db_e:
-                        st.warning(f"Saved to ZIP but DB error for {file_name}: {db_e}")
+                        st.warning(f"DB save failed for {file_name}: {db_e}")
 
-    # ---- build filtered ZIP -------------------------------------------
+            progress_bar.progress((idx + 1) / total_files)
+
+        status_text.empty()
+        progress_bar.empty()
+
+    # Build filtered ZIP
     filtered_zip = io.BytesIO()
     with zipfile.ZipFile(filtered_zip, "w", zipfile.ZIP_DEFLATED) as out_zip:
         for name, data in filtered_files.items():
@@ -275,40 +300,60 @@ def recruiter_interface():
     elif choice == "Bulk Resume Screening":
         st.title("Bulk Resume Screening")
         st.write(
-            "Upload a **ZIP** containing any number of PDF/TXT resumes. "
-            "The system will evaluate each one and give you a **filtered ZIP** "
-            "with only those scoring **≥ 7/10**."
+            "Upload a **job description** and a **ZIP of resumes**. "
+            "The AI will evaluate each resume against the job and return only those scoring **≥ 7/10**."
         )
 
-        zip_file = st.file_uploader("Upload ZIP of resumes", type=["zip"])
+        # --- Job Description Input ---
+        if "bulk_job_description" not in st.session_state:
+            st.session_state.bulk_job_description = ""
+        job_description = st.text_area(
+            "Enter Job Description (required)",
+            height=150,
+            value=st.session_state.bulk_job_description,
+            placeholder="Paste the full job description here (skills, experience, role, etc.)"
+        )
 
-        if zip_file:
-            zip_bytes = zip_file.read()
-            with st.spinner("Processing resumes… (this may take a while)"):
-                filtered_zip, summary = screen_bulk_resumes(zip_bytes, st.session_state.user['id'])
+        # --- ZIP Upload ---
+        zip_file = st.file_uploader("Upload ZIP of Resumes (PDF/TXT)", type=["zip"])
 
-            # ---- Summary table ------------------------------------------------
-            st.subheader("Screening Summary")
-            df = st.dataframe(
-                [
-                    {"File": s["filename"], "Rating": s["rating"]}
-                    for s in summary
-                ],
-                use_container_width=True
-            )
-
-            # ---- Download filtered ZIP -----------------------------------------
-            if filtered_zip:
-                st.success(f"{len([s for s in summary if isinstance(s['rating'], int) and s['rating'] >= 7])} "
-                           "resumes passed the ≥7/10 threshold.")
-                st.download_button(
-                    label="Download Filtered ZIP",
-                    data=filtered_zip,
-                    file_name="filtered_resumes.zip",
-                    mime="application/zip"
-                )
+        if st.button("Start Screening") and job_description and zip_file:
+            if not job_description.strip():
+                st.error("Please enter a job description.")
+            elif not zip_file:
+                st.error("Please upload a ZIP file.")
             else:
-                st.info("No resumes met the ≥7/10 criteria.")
+                st.session_state.bulk_job_description = job_description
+                zip_bytes = zip_file.read()
+
+                with st.spinner("Screening resumes against the job description..."):
+                    filtered_zip, summary = screen_bulk_resumes_with_jd(
+                        zip_bytes, job_description, st.session_state.user['id']
+                    )
+
+                # --- Summary Table ---
+                st.subheader("Screening Results")
+                results = [
+                    {"File": s["filename"], "Rating": s["rating"], "Status": s["status"]}
+                    for s in summary
+                ]
+                st.dataframe(results, use_container_width=True)
+
+                # --- Download Filtered ZIP ---
+                passed_count = len([s for s in summary if s["status"] == "Passed"])
+                if passed_count > 0:
+                    st.success(f"{passed_count} resume(s) passed (≥ 7/10). Download below.")
+                    st.download_button(
+                        label=f"Download {passed_count} Filtered Resume(s)",
+                        data=filtered_zip,
+                        file_name="filtered_top_resumes.zip",
+                        mime="application/zip"
+                    )
+                else:
+                    st.warning("No resumes met the ≥ 7/10 threshold.")
+
+        elif st.button("Start Screening"):
+            st.warning("Please provide both a job description and a ZIP file.")
 
     # ------------------------------------------------------------------
     # MORE (logout / delete)
