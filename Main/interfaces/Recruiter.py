@@ -311,18 +311,25 @@ def recruiter_interface():
             "Enter Job Description (required)",
             height=150,
             value=st.session_state.bulk_job_description,
-            placeholder="Paste the full job description here (skills, experience, role, etc.)"
+            placeholder="Paste the full job description here (skills, experience, role, etc.)",
+            key="bulk_jd_input"
         )
 
         # --- ZIP Upload ---
-        zip_file = st.file_uploader("Upload ZIP of Resumes (PDF/TXT)", type=["zip"])
+        zip_file = st.file_uploader(
+            "Upload ZIP of Resumes (PDF/TXT)",
+            type=["zip"],
+            key="bulk_zip_uploader"
+        )
 
-        if st.button("Start Screening") and job_description and zip_file:
+        # --- Single Start Button ---
+        if st.button("Start Screening", type="primary"):
             if not job_description.strip():
                 st.error("Please enter a job description.")
             elif not zip_file:
-                st.error("Please upload a ZIP file.")
+                st.error("Please upload a ZIP file containing resumes.")
             else:
+                # Save to session for persistence
                 st.session_state.bulk_job_description = job_description
                 zip_bytes = zip_file.read()
 
@@ -347,13 +354,11 @@ def recruiter_interface():
                         label=f"Download {passed_count} Filtered Resume(s)",
                         data=filtered_zip,
                         file_name="filtered_top_resumes.zip",
-                        mime="application/zip"
+                        mime="application/zip",
+                        key="download_filtered"
                     )
                 else:
                     st.warning("No resumes met the ≥ 7/10 threshold.")
-
-        elif st.button("Start Screening"):
-            st.warning("Please provide both a job description and a ZIP file.")
 
     # ------------------------------------------------------------------
     # MORE (logout / delete)
