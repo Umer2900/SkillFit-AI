@@ -353,19 +353,22 @@ def recruiter_interface():
         # === RESULTS SECTION – ONLY SHOW AFTER SCREENING ===
         if st.session_state.bulk_results:
             st.markdown("---")
+            
+            # --- Summary Table ---
             st.subheader("Screening Results")
-
-            # Table
             results = [
                 {"File": s["filename"], "Rating": s["rating"], "Status": s["status"]}
                 for s in st.session_state.bulk_results["summary"]
             ]
-            st.dataframe(results, use_container_width=True)
+            df_results = pd.DataFrame(results)
+            st.dataframe(df_results, use_container_width=True)
 
-            # Stats + Download
+            # --- Stats + Downloads ---
             passed_count = len([s for s in results if s["Status"] == "Passed"])
             if passed_count > 0:
                 st.success(f"**{passed_count} resume(s)** passed (≥ 7/10)")
+
+                # ZIP Download
                 st.download_button(
                     label=f"Download {passed_count} Filtered Resume(s)",
                     data=st.session_state.bulk_results["filtered_zip"],
@@ -373,20 +376,22 @@ def recruiter_interface():
                     mime="application/zip",
                     key="download_filtered_bulk"
                 )
+
+                # CSV Download – FIXED
+                csv_buffer = io.StringIO()
+                df_results.to_csv(csv_buffer, index=False)
+                st.download_button(
+                    label="Download Results as CSV",
+                    data=csv_buffer.getvalue(),
+                    file_name="screening_results.csv",
+                    mime="text/csv",
+                    key="download_csv_bulk"
+                )
             else:
                 st.warning("No resumes met the ≥ 7/10 threshold.")
 
             # === CLEAR BUTTON – AT THE VERY END ===
             st.markdown("---")
-            # col_left, col_right = st.columns([5, 1])
-            # with col_right:
-            #     if st.button("Clear", type="secondary", key="clear_results_final"):
-            #         # Reset ALL session state
-            #         st.session_state.bulk_job_description = ""
-            #         st.session_state.bulk_zip_file = None
-            #         st.session_state.bulk_results = None
-            #         st.rerun()
-            
             col_right, = st.columns(1)  # note the comma to unpack the single element
             with col_right:
                 if st.button("Clear"):
@@ -395,69 +400,6 @@ def recruiter_interface():
                     st.session_state.bulk_results = None
                     st.rerun()
 
-
-    # elif choice == "Bulk Resume Screening":
-    #     st.title("Bulk Resume Screening")
-    #     st.write(
-    #         "Upload a **job description** and a **ZIP of resumes**. "
-    #         "The AI will evaluate each resume against the job and return only those scoring **≥ 7/10**."
-    #     )
-
-    #     # --- Job Description Input ---
-    #     if "bulk_job_description" not in st.session_state:
-    #         st.session_state.bulk_job_description = ""
-    #     job_description = st.text_area(
-    #         "Enter Job Description (required)",
-    #         height=150,
-    #         value=st.session_state.bulk_job_description,
-    #         placeholder="Paste the full job description here (skills, experience, role, etc.)",
-    #         key="bulk_jd_input"
-    #     )
-
-    #     # --- ZIP Upload ---
-    #     zip_file = st.file_uploader(
-    #         "Upload ZIP of Resumes (PDF/TXT)",
-    #         type=["zip"],
-    #         key="bulk_zip_uploader"
-    #     )
-
-    #     # --- Single Start Button ---
-    #     if st.button("Start Screening", type="primary"):
-    #         if not job_description.strip():
-    #             st.error("Please enter a job description.")
-    #         elif not zip_file:
-    #             st.error("Please upload a ZIP file containing resumes.")
-    #         else:
-    #             # Save to session for persistence
-    #             st.session_state.bulk_job_description = job_description
-    #             zip_bytes = zip_file.read()
-
-    #             with st.spinner("Screening resumes against the job description..."):
-    #                 filtered_zip, summary = screen_bulk_resumes_with_jd(
-    #                     zip_bytes, job_description, st.session_state.user['id']
-    #                 )
-
-    #             # --- Summary Table ---
-    #             st.subheader("Screening Results")
-    #             results = [
-    #                 {"File": s["filename"], "Rating": s["rating"], "Status": s["status"]}
-    #                 for s in summary
-    #             ]
-    #             st.dataframe(results, use_container_width=True)
-
-    #             # --- Download Filtered ZIP ---
-    #             passed_count = len([s for s in summary if s["status"] == "Passed"])
-    #             if passed_count > 0:
-    #                 st.success(f"{passed_count} resume(s) passed (≥ 7/10). Download below.")
-    #                 st.download_button(
-    #                     label=f"Download {passed_count} Filtered Resume(s)",
-    #                     data=filtered_zip,
-    #                     file_name="filtered_top_resumes.zip",
-    #                     mime="application/zip",
-    #                     key="download_filtered"
-    #                 )
-    #             else:
-    #                 st.warning("No resumes met the ≥ 7/10 threshold.")
 
     # ------------------------------------------------------------------
     # MORE (logout / delete)
