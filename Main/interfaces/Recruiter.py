@@ -3,6 +3,7 @@ import streamlit as st
 import PyPDF2
 import io
 import time
+import pandas as pd
 
 import zipfile
 import re
@@ -353,7 +354,7 @@ def recruiter_interface():
         # === RESULTS SECTION – ONLY SHOW AFTER SCREENING ===
         if st.session_state.bulk_results:
             st.markdown("---")
-            
+
             # --- Summary Table ---
             st.subheader("Screening Results")
             results = [
