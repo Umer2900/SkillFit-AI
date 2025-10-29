@@ -330,7 +330,7 @@ def recruiter_interface():
         if zip_file is not None:
             st.session_state.bulk_zip_file = zip_file
 
-        # === Start Button ===
+        # === Start Button (Only) ===
         if st.button("Start Screening", type="primary", key="start_bulk"):
             if not job_description.strip():
                 st.error("Please enter a job description.")
@@ -350,7 +350,7 @@ def recruiter_interface():
                 }
                 st.success("Screening complete!")
 
-        # === Results Section (Only Show if Results Exist) ===
+        # === RESULTS SECTION – ONLY SHOW AFTER SCREENING ===
         if st.session_state.bulk_results:
             st.markdown("---")
             st.subheader("Screening Results")
@@ -376,21 +376,19 @@ def recruiter_interface():
             else:
                 st.warning("No resumes met the ≥ 7/10 threshold.")
 
-            # === CLEAR BUTTON – BELOW EVERYTHING ===
+            # === CLEAR BUTTON – AT THE VERY END ===
             st.markdown("---")
-            col_clear1, col_clear2 = st.columns([6, 1])
-            with col_clear2:
-                if st.button("Clear", type="secondary", key="clear_results_bulk"):
-                    # Reset everything
+            col_left, col_right = st.columns([5, 1])
+            with col_right:
+                if st.button("Clear", type="secondary", key="clear_results_final"):
+                    # Reset ALL session state
                     st.session_state.bulk_job_description = ""
                     st.session_state.bulk_zip_file = None
                     st.session_state.bulk_results = None
-                    # Reset file uploader and text area via rerun
                     st.rerun()
 
         else:
             st.info("Enter a job description, upload a ZIP, and click **Start Screening** to begin.")
-
 
     # elif choice == "Bulk Resume Screening":
     #     st.title("Bulk Resume Screening")
