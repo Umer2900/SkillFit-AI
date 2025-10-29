@@ -378,7 +378,8 @@ def recruiter_interface():
 
             # === CLEAR BUTTON – AT THE VERY END ===
             st.markdown("---")
-            col_left, col_right = st.columns([5, 1])
+            # col_left, col_right = st.columns([5, 1])
+            col_left, col_right = st.columns([1, 5])
             with col_right:
                 if st.button("Clear", type="secondary", key="clear_results_final"):
                     # Reset ALL session state
@@ -387,8 +388,6 @@ def recruiter_interface():
                     st.session_state.bulk_results = None
                     st.rerun()
 
-        else:
-            st.info("Enter a job description, upload a ZIP, and click **Start Screening** to begin.")
 
     # elif choice == "Bulk Resume Screening":
     #     st.title("Bulk Resume Screening")
