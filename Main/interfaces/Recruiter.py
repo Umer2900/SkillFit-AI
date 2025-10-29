@@ -392,14 +392,21 @@ def recruiter_interface():
                 st.warning("No resumes met the ≥ 7/10 threshold.")
 
             # === CLEAR BUTTON – AT THE VERY END ===
+            # st.markdown("---")
+            # col_right, = st.columns(1)  # note the comma to unpack the single element
+            # with col_right:
+            #     if st.button("Clear"):
+            #         st.session_state.bulk_job_description = ""
+            #         st.session_state.bulk_zip_file = None
+            #         st.session_state.bulk_results = None
+            #         st.rerun()
+
             st.markdown("---")
-            col_right, = st.columns(1)  # note the comma to unpack the single element
-            with col_right:
-                if st.button("Clear"):
-                    st.session_state.bulk_job_description = ""
-                    st.session_state.bulk_zip_file = None
-                    st.session_state.bulk_results = None
-                    st.rerun()
+            if st.button("Clear", type="secondary", key="clear_results_final"):
+                st.session_state.bulk_job_description = ""
+                st.session_state.bulk_zip_file = None
+                st.session_state.bulk_results = None
+                st.rerun()
 
 
     # ------------------------------------------------------------------
