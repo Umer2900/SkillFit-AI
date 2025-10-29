@@ -41,23 +41,26 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
     """
     Returns:
         filtered_zip_bytes (bytes)
-        summary (list of dicts): [{filename, rating, status, raw_gemini}]
+        summary (list of dicts): [{filename, rating, status}]
     """
     summary = []
     filtered_files = {}
-    job_desc_parsed = parse_job_description(job_description)  # Extract JD
+    job_desc_parsed = parse_job_description(job_description)
 
     with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zip_ref:
-        total_files = len([n for n in zip_ref.namelist() if not n.startswith("__") and n.lower().endswith(('.pdf', '.txt'))])
+        file_list = [
+            name for name in zip_ref.namelist()
+            if not name.startswith("__") and not name.endswith("/") and name.lower().endswith(('.pdf', '.txt'))
+        ]
+        total_files = len(file_list)
+        if total_files == 0:
+            st.warning("No PDF/TXT files found in the ZIP.")
+            return io.BytesIO().getvalue(), []
+
         progress_bar = st.progress(0)
         status_text = st.empty()
 
-        for idx, file_name in enumerate(zip_ref.namelist()):
-            if file_name.startswith("__") or file_name.endswith("/"):
-                continue
-            if not file_name.lower().endswith(('.pdf', '.txt')):
-                continue
-
+        for idx, file_name in enumerate(file_list):
             status_text.text(f"Processing: {file_name} ({idx+1}/{total_files})")
 
             with zip_ref.open(file_name) as f:
@@ -71,21 +74,21 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
                     else:
                         resume_text = txt_to_text(file_obj)
                 except Exception as e:
-                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": str(e)})
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
                 # Parse resume
                 try:
                     resume_parsed = parse_resume_for_recruiter(resume_text)
                 except Exception as e:
-                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": f"Gemini parse error: {e}"})
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
-                # Compare with job description
+                # Compare
                 try:
                     comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
                 except Exception as e:
-                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed", "raw": f"Comparison error: {e}"})
+                    summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
                 # Extract rating
@@ -96,18 +99,12 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
                 summary.append({
                     "filename": file_name,
                     "rating": f"{rating}/10" if rating else "N/A",
-                    "status": status,
-                    "raw": comparison
+                    "status": status
                 })
 
-                # Keep if passed
+                # Keep only if passed
                 if status == "Passed":
                     filtered_files[file_name] = file_bytes
-                    # Optional: auto-save to Liked Resume
-                    try:
-                        save_resume(user_id, io.BytesIO(file_bytes))
-                    except Exception as db_e:
-                        st.warning(f"DB save failed for {file_name}: {db_e}")
 
             progress_bar.progress((idx + 1) / total_files)
 
