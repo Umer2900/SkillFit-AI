@@ -387,17 +387,19 @@ def recruiter_interface():
             #         st.session_state.bulk_results = None
             #         st.rerun()
             
-            if st.button("Clear"):
-                st.session_state.job_description = ""
-                st.session_state.resume_file = None
-                st.session_state.analysis_results = {
-                    "job_desc": None,
-                    "resume": None,
-                    "comparison": None,
-                    "feedback": None
-                }
-                st.session_state.uploader_key += 1
-                st.rerun()
+            col_right, = st.columns(1)  # note the comma to unpack the single element
+            with col_right:
+                if st.button("Clear"):
+                    st.session_state.job_description = ""
+                    st.session_state.resume_file = None
+                    st.session_state.analysis_results = {
+                        "job_desc": None,
+                        "resume": None,
+                        "comparison": None,
+                        "feedback": None
+                    }
+                    st.session_state.uploader_key += 1
+                    st.rerun()
 
 
     # elif choice == "Bulk Resume Screening":
