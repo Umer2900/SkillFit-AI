@@ -305,15 +305,15 @@ def recruiter_interface():
             "The AI will evaluate each resume and return only those scoring **≥ 7/10**."
         )
 
-        # Initialize session state
+        # === Initialize Session State ===
         if "bulk_job_description" not in st.session_state:
             st.session_state.bulk_job_description = ""
         if "bulk_zip_file" not in st.session_state:
             st.session_state.bulk_zip_file = None
         if "bulk_results" not in st.session_state:
-            st.session_state.bulk_results = None  # {filtered_zip, summary}
+            st.session_state.bulk_results = None
 
-        # --- Job Description ---
+        # === Input Section ===
         job_description = st.text_area(
             "Enter Job Description (required)",
             height=150,
@@ -322,45 +322,35 @@ def recruiter_interface():
             key="bulk_jd_input"
         )
 
-        # --- ZIP Upload ---
         zip_file = st.file_uploader(
             "Upload ZIP of Resumes (PDF/TXT)",
             type=["zip"],
             key="bulk_zip_uploader"
         )
-        if zip_file:
+        if zip_file is not None:
             st.session_state.bulk_zip_file = zip_file
 
-        # --- Action Buttons ---
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Start Screening", type="primary", key="start_bulk"):
-                if not job_description.strip():
-                    st.error("Please enter a job description.")
-                elif not zip_file:
-                    st.error("Please upload a ZIP file.")
-                else:
-                    st.session_state.bulk_job_description = job_description
-                    zip_bytes = zip_file.read()
+        # === Start Button ===
+        if st.button("Start Screening", type="primary", key="start_bulk"):
+            if not job_description.strip():
+                st.error("Please enter a job description.")
+            elif not zip_file:
+                st.error("Please upload a ZIP file.")
+            else:
+                st.session_state.bulk_job_description = job_description
+                zip_bytes = zip_file.read()
 
-                    with st.spinner("Screening resumes..."):
-                        filtered_zip, summary = screen_bulk_resumes_with_jd(
-                            zip_bytes, job_description, st.session_state.user['id']
-                        )
-                    st.session_state.bulk_results = {
-                        "filtered_zip": filtered_zip,
-                        "summary": summary
-                    }
-                    st.success("Screening complete!")
+                with st.spinner("Screening resumes..."):
+                    filtered_zip, summary = screen_bulk_resumes_with_jd(
+                        zip_bytes, job_description, st.session_state.user['id']
+                    )
+                st.session_state.bulk_results = {
+                    "filtered_zip": filtered_zip,
+                    "summary": summary
+                }
+                st.success("Screening complete!")
 
-        with col2:
-            if st.button("Clear", type="secondary", key="clear_bulk"):
-                st.session_state.bulk_job_description = ""
-                st.session_state.bulk_zip_file = None
-                st.session_state.bulk_results = None
-                st.rerun()
-
-        # --- Display Results (Only if exist) ---
+        # === Results Section (Only Show if Results Exist) ===
         if st.session_state.bulk_results:
             st.markdown("---")
             st.subheader("Screening Results")
@@ -385,6 +375,18 @@ def recruiter_interface():
                 )
             else:
                 st.warning("No resumes met the ≥ 7/10 threshold.")
+
+            # === CLEAR BUTTON – BELOW EVERYTHING ===
+            st.markdown("---")
+            col_clear1, col_clear2 = st.columns([6, 1])
+            with col_clear2:
+                if st.button("Clear", type="secondary", key="clear_results_bulk"):
+                    # Reset everything
+                    st.session_state.bulk_job_description = ""
+                    st.session_state.bulk_zip_file = None
+                    st.session_state.bulk_results = None
+                    # Reset file uploader and text area via rerun
+                    st.rerun()
 
         else:
             st.info("Enter a job description, upload a ZIP, and click **Start Screening** to begin.")
