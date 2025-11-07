@@ -117,17 +117,59 @@ def recruiter_interface():
     if choice == "Homepage":
         st.title("Recruiter Homepage")
         st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+        # st.markdown("""
+        # ### AI-Powered Recruitment — Simplified
+
+        # No more manual resume screening. No saved lists. Just **pure efficiency**.
+
+        # - **Profile Check**: Compare one resume to a job description instantly.
+        # - **Bulk Screening**: Upload 100 resumes → Get top 10 in seconds.
+        # - **Download ZIP + CSV**: Take results anywhere.
+
+        # **You focus on hiring. We handle the noise.**
+        # """)
+
         st.markdown("""
-        ### AI-Powered Recruitment — Simplified
+        <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #1e3c72, #2a5298); border-radius: 20px; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h1 style="font-size: 42px; margin-bottom: 10px; color: #00d4ff;">
+                AI-Powered Recruitment — <span style="color: #ffd700;">Redefined</span>
+            </h1>
+            <p style="font-size: 22px; margin: 20px 0; opacity: 0.95;">
+                <strong>Forget everything you know about hiring.</strong><br>
+                No more drowning in resumes. No more "maybe" piles. No more wasted hours.
+            </p>
+            
+            <div style="display: flex; justify-content: center; gap: 40px; margin: 40px 0; flex-wrap: wrap;">
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 15px; min-width: 220px; backdrop-filter: blur(10px);">
+                    <h3>Profile Check</h3>
+                    <p>Drop 1 resume + JD → Get instant 10/10 match score + AI feedback in <strong>3 seconds</strong></p>
+                </div>
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 15px; min-width: 220px; backdrop-filter: blur(10px);">
+                    <h3>Bulk Screening</h3>
+                    <p>Upload <strong>500 resumes</strong> → Download only the <strong>top 7+/10</strong> in a ZIP<br><em>Yes, really. In under 2 minutes.</em></p>
+                </div>
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 15px; min-width: 220px; backdrop-filter: blur(10px);">
+                    <h3>Zero Clutter</h3>
+                    <p>No saved lists. No database bloat.<br>Just <strong>clean results → instant action</strong></p>
+                </div>
+            </div>
 
-        No more manual resume screening. No saved lists. Just **pure efficiency**.
+            <h2 style="color: #ffd700; margin: 40px 0 20px;">
+                You don't screen candidates anymore.<br>
+                <span style="font-size: 48px;">SkillFit AI does.</span>
+            </h2>
 
-        - **Profile Check**: Compare one resume to a job description instantly.
-        - **Bulk Screening**: Upload 100 resumes → Get top 10 in seconds.
-        - **Download ZIP + CSV**: Take results anywhere.
+            <p style="font-size: 24px; margin: 30px 0; color: #a0e7ff;">
+                <strong>You focus on interviews.</strong><br>
+                <strong>We eliminate 95% of the noise.</strong>
+            </p>
 
-        **You focus on hiring. We handle the noise.**
-        """)
+            <div style="margin-top: 40px;">
+                <strong style="font-size: 28px; color: #00ff9d;">Ready to hire 10x faster?</strong><br><br>
+                <em>→ Pick a tool from the sidebar and watch the magic.</em>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # PROFILE CHECK 
     elif choice == "Profile Check":
