@@ -40,32 +40,55 @@ def candidate_interface():
     
     if choice == "Homepage":
         st.title("Candidate Homepage")
-        st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+        # st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+
         st.markdown("""
-        ### Your Journey to the Perfect Job Starts Here. 
+        ### Welcome to SkillFit AI — Your Personal Job-Fit Superpower
 
-        As a candidate, you're on a mission to find a job that matches your skills, experience, and aspirations. **SkillFit AI** is here to help you every step of the way! Powered by the Gemini API, our platform uses advanced AI to analyze your resume and recommend the best job opportunities tailored just for you. Say goodbye to endless job searches—let us do the heavy lifting while you focus on landing your dream role.
+        **Stop guessing. Stop applying blindly. Start winning.**
 
-        #### What You Can Do Here
+        You don't need to send 100 applications to get 1 interview.  
+        You just need **one perfect match** — and SkillFit AI finds it for you in seconds.
 
-        **SkillFit AI** offers a personalized experience for candidates through two key sections accessible from the sidebar:
 
-        1. **Job Recommendation**  
-           - **What It Does**: Upload your resume, and our AI will analyze it to extract your job role, experience, and skills. Using this information, we match you with the top 5 job opportunities from our curated job dataset. Each recommendation includes the job title, company, location, and a direct link to apply.  
-           - **Why It's Useful**: Save time by focusing on jobs that are the best fit for your profile. Our AI-driven matching ensures you're applying to roles where you're most likely to succeed, based on your skills and experience.  
-           - **How to Use It**: Navigate to “Job Recommendation,” upload your resume (PDF), and click “Find Jobs” to see your personalized job matches. Click the links to apply directly!
+        #### One Upload → Your Entire Career Strategy
 
-        2. **More Options**  
-           - **What It Does**: Manage your account with options to log out or delete your account.  
-           - **Why It's Useful**: Keep your account secure by logging out when you're done. If you no longer need your account, the “Delete Account” option ensures your data is permanently removed.  
-           - **How to Use It**: Go to “More,” then choose “Logout” to end your session or “Delete Account” to remove your profile.
+        **Job Recommendation System**  
+        Upload **your resume (PDF)** → Click **“Find Jobs”** → Get this:
 
-        #### Why Choose SkillFit AI?
-        - **Personalized Job Matches**: Our AI, powered by the Gemini API, ensures you get recommendations that truly align with your profile.  
-        - **Effortless Job Search**: No more scrolling through irrelevant listings—get the best matches in seconds.  
-        - **Seamless Experience**: Our user-friendly interface makes it easy to upload your resume, find jobs, and apply with just a few clicks.  
+        - Top 5 jobs **perfectly matched** to your skills, experience & role  
+        - Real company names, locations, salaries (when available)  
+        - Direct **“Apply Here”** links — no copy-paste, no login traps  
+        - Powered by **Google Gemini AI** — smarter than any job board
 
-        Ready to take the next step in your career? Use the sidebar to explore the features and find your perfect job today!
+        No spam. No fake listings. Just **jobs you're actually qualified for**.
+
+
+        #### Why Candidates Trust SkillFit AI
+
+        - **No more rejection silence** — apply only where you're a **strong fit**  
+        - **Save 20+ hours per week** — stop scrolling Indeed & LinkedIn  
+        - **Beat ATS filters** — we show you jobs that value your real skills  
+        - **100% private** — your resume is analyzed once, then deleted  
+        - **Works for freshers & 15+ year veterans** — no bias, no limits
+
+
+        #### Your Next Step is Simple
+
+        1. Go to **“Job Recommendation”** in the sidebar  
+        2. Upload your latest resume (PDF)  
+        3. Click **“Find Jobs”**  
+        4. Apply to the top matches with **one click**
+
+        That's it.
+
+        **No profile setup. No premium subscription. No nonsense.**
+
+        **You focus on growing your career.**  
+        **Let SkillFit AI open the right doors.**
+
+        Your dream job isn't hiding — it's waiting.  
+        Upload your resume now and let's go get it
         """)
     
     elif choice == "Job Recommendation":
