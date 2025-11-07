@@ -132,7 +132,7 @@ def recruiter_interface():
 
         **2. Bulk Resume Screening**  
         Drop a **ZIP with 50, 100, or 500 resumes** → Sit back.  
-        In under 2 minutes, download a clean ZIP + CSV containing **only the candidates who scored 7/10 or higher**.  
+        In under few minutes, download a clean ZIP + CSV containing **only the candidates who scored 7/10 or higher**.  
         The rest? Gone. Forever.
 
         **3. Zero Maintenance**  
