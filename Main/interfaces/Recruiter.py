@@ -123,7 +123,6 @@ def recruiter_interface():
         **No saved resumes. No clutter. No wasted time.**  
         Just **instant, accurate, AI-powered candidate screening** — built for recruiters who value speed and precision.
 
-        ---
 
         #### What You Can Do Right Now
 
@@ -142,7 +141,6 @@ def recruiter_interface():
         - No duplicates, no mess  
         - Just results → action → hire
 
-        ---
 
         #### Why Recruiters Love SkillFit AI
 
@@ -152,25 +150,23 @@ def recruiter_interface():
         - **Export-ready** — ZIP for ATS, CSV for Excel/Google Sheets  
         - **Powered by Google Gemini** — enterprise-grade AI, zero fluff
 
-        ---
 
         #### Real Results
         > “I screened 180 resumes in 94 seconds. Got 11 perfect matches. Hired 3 in a week.”  
         > — Sarah K., Tech Recruiter @ StartupHub
 
-        > “Finally, a tool that doesn’t make me manage a ‘maybe’ list.”  
+        > “Finally, a tool that doesn't make me manage a ‘maybe' list.”  
         > — Ahmed R., HR Lead
 
-        ---
 
-        **You’re one click away from hiring smarter.**
+        **You're one click away from hiring smarter.**
 
         Use the sidebar → Pick **Profile Check** or **Bulk Screening** → Watch the magic happen.
 
         **You focus on people. Let SkillFit AI handle the paper.**
 
         **Ready to hire faster than ever?**  
-        Let’s go
+        Let's go
         """)
 
     # PROFILE CHECK 
