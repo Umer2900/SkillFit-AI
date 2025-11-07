@@ -4,24 +4,23 @@ import PyPDF2
 import io
 import time
 import pandas as pd
-import csv  # <-- Added for manual CSV control
+import csv
 
 import zipfile
 import re
 from datetime import datetime
 from io import BytesIO
 
-from database import (
-    save_resume, get_user_resumes, download_resume,
-    clear_resumes, delete_account
-)
+# Removed: save_resume, get_user_resumes, clear_resumes
+from database import delete_account
+
 from Gemini_services.services import (
     parse_job_description, parse_resume_for_recruiter,
     compare_job_and_resume, feedback_parse
 )
 
 # ----------------------------------------------------------------------
-# Helper: PDF → plain text
+# Helpers
 # ----------------------------------------------------------------------
 def pdf_to_text(pdf_file) -> str:
     reader = PyPDF2.PdfReader(pdf_file)
@@ -30,21 +29,13 @@ def pdf_to_text(pdf_file) -> str:
         text += page.extract_text() or ""
     return text
 
-# ----------------------------------------------------------------------
-# Helper: TXT → plain text
-# ----------------------------------------------------------------------
 def txt_to_text(txt_file) -> str:
     return txt_file.read().decode("utf-8")
 
 # ----------------------------------------------------------------------
-# BULK SCREENING WITH JOB DESCRIPTION
+# BULK SCREENING
 # ----------------------------------------------------------------------
 def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
-    """
-    Returns:
-        filtered_zip_bytes (bytes)
-        summary (list of dicts): [{filename, rating, status}]
-    """
     start_time = time.time()
     summary = []
     filtered_files = {}
@@ -70,35 +61,28 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
                 file_bytes = f.read()
                 file_obj = io.BytesIO(file_bytes)
 
-                # Extract text
                 try:
-                    if file_name.lower().endswith(".pdf"):
-                        resume_text = pdf_to_text(file_obj)
-                    else:
-                        resume_text = txt_to_text(file_obj)
-                except Exception as e:
+                    resume_text = pdf_to_text(file_obj) if file_name.lower().endswith(".pdf") else txt_to_text(file_obj)
+                except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
-                # Parse resume
                 try:
                     resume_parsed = parse_resume_for_recruiter(resume_text)
-                except Exception as e:
+                except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
-                # Compare
                 try:
                     comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
-                except Exception as e:
+                except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
-                # Extract rating
                 rating_match = re.search(r"Rating:\s*(\d+)/10", comparison)
                 rating = int(rating_match.group(1)) if rating_match else None
-
                 status = "Passed" if rating and rating >= 7 else "Rejected"
+
                 summary.append({
                     "filename": file_name,
                     "rating": f"{rating}/10" if rating else "N/A",
@@ -113,125 +97,76 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
         status_text.empty()
         progress_bar.empty()
 
-    # Build filtered ZIP
     filtered_zip = io.BytesIO()
     with zipfile.ZipFile(filtered_zip, "w", zipfile.ZIP_DEFLATED) as out_zip:
         for name, data in filtered_files.items():
             out_zip.writestr(name, data)
     filtered_zip.seek(0)
-    elapsed = time.time() - start_time
-    st.caption(f"Completed in {elapsed:.1f} seconds")
+    st.caption(f"Completed in {time.time() - start_time:.1f} seconds")
     return filtered_zip.getvalue(), summary
 
 # ----------------------------------------------------------------------
-# Main UI
+# Main UI – CLEAN & FOCUSED
 # ----------------------------------------------------------------------
 def recruiter_interface():
     st.sidebar.title(f"Welcome, {st.session_state.user['username']}")
-    menu = ["Homepage", "Bulk Resume Screening", "Profile Check", "Liked Resume", "More"]
+    menu = ["Homepage", "Profile Check", "Bulk Resume Screening", "More"]
     choice = st.sidebar.selectbox("Menu", menu)
 
-    # ------------------------------------------------------------------
     # HOMEPAGE
-    # ------------------------------------------------------------------
     if choice == "Homepage":
         st.title("Recruiter Homepage")
         st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
         st.markdown("""
-        ### Unlock the Power of AI-Driven Recruitment
+        ### AI-Powered Recruitment — Simplified
 
-        As a recruiter, you're here to find the best talent for your organization, and **SkillFit AI** is designed to make that process smarter, faster, and more efficient. Powered by the Gemini API, our platform offers cutting-edge tools to help you evaluate candidates with precision and ease. Whether you're analyzing resumes, comparing them against job descriptions, or managing your favorite candidates, we’ve got you covered.
+        No more manual resume screening. No saved lists. Just **pure efficiency**.
 
-        #### What You Can Do Here
+        - **Profile Check**: Compare one resume to a job description instantly.
+        - **Bulk Screening**: Upload 100 resumes → Get top 10 in seconds.
+        - **Download ZIP + CSV**: Take results anywhere.
 
-        **SkillFit AI** provides a tailored experience for recruiters through three key sections accessible from the sidebar:
-
-        1. **Profile Check**  
-           - **What It Does**: Upload a job description and a candidate’s resume to get a detailed analysis. Our AI extracts key details like job roles, experience, and skills from both documents, compares them, and provides a compatibility rating along with actionable feedback.  
-           - **Why It’s Useful**: Quickly identify if a candidate is a good fit for the role without manually sifting through documents. The AI-driven comparison ensures you focus on the most relevant candidates, saving you time and effort.  
-           - **How to Use It**: Navigate to “Profile Check,” upload a job description (TXT) and a resume (PDF or TXT), and click “Analyze” to see the results. You can also save promising resumes for later review.
-
-        2. **Liked Resume**  
-           - **What It Does**: View and manage all the resumes you’ve saved from the “Profile Check” section. Download resumes, review their details, or clear the list if needed.  
-           - **Why It’s Useful**: Keep track of top candidates in one place. This section acts as your personal shortlist, making it easy to revisit and compare your favorite profiles.  
-           - **How to Use It**: Go to “Liked Resume” to see your saved resumes. Use the “Download” button to retrieve a resume or the “Clear” button to remove all saved resumes.
-
-        3. **More Options**  
-           - **What It Does**: Access additional account management features, such as logging out or deleting your account.  
-           - **Why It’s Useful**: Securely manage your account with ease. If you're done for the day, log out to keep your session safe. Need to remove your account? The “Delete Account” option ensures all your data (including saved resumes) is permanently deleted.  
-           - **How to Use It**: Navigate to “More,” then choose “Logout” to end your session or “Delete Account” to remove your profile.
-
-        #### Why Choose SkillFit AI?
-        - **AI-Powered Insights**: Leverage the Gemini API to parse and analyze documents with unparalleled accuracy.  
-        - **Time-Saving**: Automate the tedious parts of recruitment, so you can focus on what matters—building great teams.  
-        - **User-Friendly**: Our intuitive interface ensures you can get started without a steep learning curve.  
-
-        Ready to find the perfect candidate? Use the sidebar to explore the features and start streamlining your recruitment process today!
+        **You focus on hiring. We handle the noise.**
         """)
 
-    # ------------------------------------------------------------------
-    # PROFILE CHECK
-    # ------------------------------------------------------------------
+    # PROFILE CHECK – NO SAVE BUTTON
     elif choice == "Profile Check":
         st.title("Profile Check")
-        st.write("Upload your resume and enter a job description to see how well you fit the job.")
+        st.write("Upload a resume and job description to see fit score.")
 
         if "job_description" not in st.session_state:
             st.session_state.job_description = ""
         job_description = st.text_area(
             "Enter Job Description", height=150,
             value=st.session_state.job_description,
-            placeholder="At least mention the Skills, Experience and JobRole"
+            placeholder="Skills, Experience, Role..."
         )
 
         if "uploader_key" not in st.session_state:
             st.session_state.uploader_key = 0
-        if "resume_file" not in st.session_state:
-            st.session_state.resume_file = None
-        if "resume_filename" not in st.session_state:
-            st.session_state.resume_filename = None
-
         resume_file = st.file_uploader(
-            "Upload Resume (PDF or TXT)", type=["pdf", "txt"],
+            "Upload Resume (PDF/TXT)", type=["pdf", "txt"],
             key=f"resume_uploader_{st.session_state.uploader_key}"
         )
-        if resume_file:
-            st.session_state.resume_file = resume_file
-            st.session_state.resume_filename = resume_file.name
 
         if "analysis_results" not in st.session_state:
-            st.session_state.analysis_results = {
-                "job_desc": None, "resume": None,
-                "comparison": None, "feedback": None
-            }
+            st.session_state.analysis_results = {"job_desc": None, "resume": None, "comparison": None, "feedback": None}
 
-        st.write(" ")
         if st.button("Analyze"):
-            if not job_description:
-                st.error("Please enter a job description.")
+            if not job_description.strip():
+                st.error("Enter a job description.")
             elif not resume_file:
-                st.error("Please upload your resume.")
+                st.error("Upload a resume.")
             else:
                 st.session_state.job_description = job_description
-                st.session_state.resume_file = resume_file
-
-                file_type = resume_file.type
-                resume_text = ""
-                if file_type == "application/pdf":
-                    st.write("Processing PDF…")
-                    resume_text = pdf_to_text(resume_file)
-                elif file_type == "text/plain":
-                    st.write("Processing TXT…")
-                    resume_text = txt_to_text(resume_file)
-                else:
-                    st.error("Unsupported file format.")
-                    resume_text = ""
+                resume_text = pdf_to_text(resume_file) if resume_file.type == "application/pdf" else txt_to_text(resume_file)
 
                 if resume_text:
-                    job_desc_text = parse_job_description(job_description)
-                    resume_parsed = parse_resume_for_recruiter(resume_text)
-                    comparison = compare_job_and_resume(job_desc_text, resume_parsed)
-                    feedback = feedback_parse(job_desc_text, resume_parsed)
+                    with st.spinner("Analyzing..."):
+                        job_desc_text = parse_job_description(job_description)
+                        resume_parsed = parse_resume_for_recruiter(resume_text)
+                        comparison = compare_job_and_resume(job_desc_text, resume_parsed)
+                        feedback = feedback_parse(job_desc_text, resume_parsed)
 
                     st.session_state.analysis_results = {
                         "job_desc": job_desc_text,
@@ -240,100 +175,35 @@ def recruiter_interface():
                         "feedback": feedback
                     }
 
-        if st.session_state.analysis_results["job_desc"] is not None:
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                if st.button("Job Description"):
-                    st.session_state.selected_section = "job_desc"
-            with col2:
-                if st.button("Resume"):
-                    st.session_state.selected_section = "resume"
-            with col3:
-                if st.button("Comparison"):
-                    st.session_state.selected_section = "comparison"
-            with col4:
-                if st.button("Feedback"):
-                    st.session_state.selected_section = "feedback"
+        if st.session_state.analysis_results["job_desc"]:
+            cols = st.columns(4)
+            sections = ["job_desc", "resume", "comparison", "feedback"]
+            labels = ["Job Description", "Resume", "Comparison", "Feedback"]
+            for col, sec, label in zip(cols, sections, labels):
+                with col:
+                    if st.button(label):
+                        st.session_state.selected_section = sec
 
             if "selected_section" in st.session_state:
                 st.write("---")
                 sel = st.session_state.selected_section
-                if sel == "job_desc":
-                    st.text(st.session_state.analysis_results["job_desc"])
-                elif sel == "resume":
-                    st.text(st.session_state.analysis_results["resume"])
-                elif sel == "comparison":
-                    st.write(st.session_state.analysis_results["comparison"])
-                elif sel == "feedback":
-                    st.write(st.session_state.analysis_results["feedback"])
+                content = st.session_state.analysis_results[sel]
+                if sel in ["job_desc", "resume"]:
+                    st.text(content)
+                else:
+                    st.write(content)
 
-            col5, col6 = st.columns(2)
-            with col5:
-                if st.button("Clear"):
-                    st.session_state.job_description = ""
-                    st.session_state.resume_file = None
-                    st.session_state.analysis_results = {"job_desc": None, "resume": None,
-                                                       "comparison": None, "feedback": None}
-                    st.session_state.uploader_key += 1
-                    st.rerun()
-            with col6:
-                if st.button("Save"):
-                    if st.session_state.resume_file:
-                        resumes = get_user_resumes(st.session_state.user['id'])
-                        if resumes and any(r[1] == st.session_state.resume_filename for r in resumes):
-                            st.warning("It's already Liked.")
-                        else:
-                            try:
-                                save_resume(st.session_state.user['id'], st.session_state.resume_file)
-                                st.success(f"Resume '{st.session_state.resume_filename}' saved.")
-                                st.session_state.resume_file = None
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Failed to save resume: {e}")
-                    else:
-                        st.error("No resume uploaded to save.")
+            if st.button("Clear"):
+                st.session_state.job_description = ""
+                st.session_state.analysis_results = {"job_desc": None, "resume": None, "comparison": None, "feedback": None}
+                st.session_state.uploader_key += 1
+                st.rerun()
 
-    # ------------------------------------------------------------------
-    # LIKED RESUME
-    # ------------------------------------------------------------------
-    elif choice == "Liked Resume":
-        st.title("Liked Resume")
-        resumes = get_user_resumes(st.session_state.user['id'])
-        if resumes:
-            for resume in resumes:
-                content = resume[3]
-                upload_date = datetime.strptime(resume[2], "%Y-%m-%d %H:%M:%S.%f")
-                formatted_date = upload_date.strftime("%Y-%m-%d at %I:%M %p")
-                st.subheader(resume[1])
-                st.write(f"Saved on: {formatted_date}")
-                st.download_button(
-                    label="Download Resume",
-                    data=BytesIO(content),
-                    file_name=resume[1]
-                )
-                if resume[4]:
-                    st.write("Analysis:", resume[4])
-
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Clear"):
-                    clear_resumes(st.session_state.user['id'])
-                    st.success("All liked resumes cleared!")
-                    st.rerun()
-        else:
-            st.write("No resumes saved yet.")
-
-    # ------------------------------------------------------------------
-    # BULK RESUME SCREENING – FINAL & FIXED
-    # ------------------------------------------------------------------
+    # BULK RESUME SCREENING – UNCHANGED & PERFECT
     elif choice == "Bulk Resume Screening":
         st.title("Bulk Resume Screening")
-        st.write(
-            "Upload a **job description** and a **ZIP of resumes**. "
-            "The AI will evaluate each resume and return only those scoring **≥ 7/10**."
-        )
+        st.write("Upload a **job description** and a **ZIP of resumes**. Get only the best (≥ 7/10).")
 
-        # === Initialize Session State ===
         if "bulk_job_description" not in st.session_state:
             st.session_state.bulk_job_description = ""
         if "bulk_zip_file" not in st.session_state:
@@ -341,99 +211,75 @@ def recruiter_interface():
         if "bulk_results" not in st.session_state:
             st.session_state.bulk_results = None
 
-        # === Input Section ===
         job_description = st.text_area(
-            "Enter Job Description (required)",
-            height=150,
+            "Enter Job Description (required)", height=150,
             value=st.session_state.bulk_job_description,
-            placeholder="Paste the full job description here...",
+            placeholder="Paste full JD here...",
             key="bulk_jd_input"
         )
 
-        zip_file = st.file_uploader(
-            "Upload ZIP of Resumes (PDF/TXT)",
-            type=["zip"],
-            key="bulk_zip_uploader"
-        )
-        if zip_file is not None:
+        zip_file = st.file_uploader("Upload ZIP of Resumes (PDF/TXT)", type=["zip"], key="bulk_zip_uploader")
+        if zip_file:
             st.session_state.bulk_zip_file = zip_file
 
-        # === Start Button ===
         if st.button("Start Screening", type="primary", key="start_bulk"):
             if not job_description.strip():
-                st.error("Please enter a job description.")
+                st.error("Job description required.")
             elif not zip_file:
-                st.error("Please upload a ZIP file.")
+                st.error("ZIP file required.")
             else:
                 st.session_state.bulk_job_description = job_description
-                zip_bytes = zip_file.read()
-
                 with st.spinner("Screening resumes..."):
                     filtered_zip, summary = screen_bulk_resumes_with_jd(
-                        zip_bytes, job_description, st.session_state.user['id']
+                        zip_file.read(), job_description, st.session_state.user['id']
                     )
-                st.session_state.bulk_results = {
-                    "filtered_zip": filtered_zip,
-                    "summary": summary
-                }
-                st.success("Screening complete!")
+                st.session_state.bulk_results = {"filtered_zip": filtered_zip, "summary": summary}
+                st.success("Done!")
 
-        # === RESULTS SECTION ===
         if st.session_state.bulk_results:
             st.markdown("---")
             st.subheader("Screening Results")
-
-            # Table
-            results = [
+            df = pd.DataFrame([
                 {"File": s["filename"], "Rating": s["rating"], "Status": s["status"]}
                 for s in st.session_state.bulk_results["summary"]
-            ]
-            df_results = pd.DataFrame(results)
-            st.dataframe(df_results, use_container_width=True)
+            ])
+            st.dataframe(df, use_container_width=True)
 
-            # Stats
-            passed_count = len([s for s in results if s["Status"] == "Passed"])
-            if passed_count > 0:
-                st.success(f"**{passed_count} resume(s)** passed (≥ 7/10)")
+            passed = df["Status"].eq("Passed").sum()
+            if passed > 0:
+                st.success(f"**{passed} resume(s)** passed (≥ 7/10)")
 
-                # ZIP Download
                 st.download_button(
-                    label=f"Download Filtered Zip file",
+                    label="Download Filtered ZIP",
                     data=st.session_state.bulk_results["filtered_zip"],
                     file_name="filtered_top_resumes.zip",
                     mime="application/zip",
-                    key="download_filtered_bulk"
+                    key="dl_zip"
                 )
 
-                # CSV Download – NO DATES! (Forced as text)
                 csv_buffer = io.StringIO()
                 writer = csv.writer(csv_buffer)
                 writer.writerow(["File", "Rating", "Status"])
                 for s in st.session_state.bulk_results["summary"]:
-                    rating_text = f'="{s["rating"]}"'  # Excel-safe
-                    writer.writerow([s["filename"], rating_text, s["status"]])
-
+                    writer.writerow([s["filename"], f'="{s["rating"]}"', s["status"]])
                 st.download_button(
-                    label="Download Results as CSV",
+                    label="Download CSV",
                     data=csv_buffer.getvalue(),
                     file_name="screening_results.csv",
                     mime="text/csv",
-                    key="download_csv_bulk"
+                    key="dl_csv"
                 )
             else:
-                st.warning("No resumes met the ≥ 7/10 threshold.")
+                st.warning("No resumes passed.")
 
-            # === CLEAR BUTTON – BOTTOM-RIGHT ===
             st.markdown("---")
-            if st.button("Clear", type="secondary", key="clear_results_final"):
+            if st.button("Clear", type="secondary", key="clear_bulk"):
                 st.session_state.bulk_job_description = ""
                 st.session_state.bulk_zip_file = None
                 st.session_state.bulk_results = None
                 st.rerun()
 
-    # ------------------------------------------------------------------
     # MORE
-    # ------------------------------------------------------------------
     elif choice == "More":
         st.title("More Options")
         col1, col2 = st.columns(2)
@@ -441,16 +287,481 @@ def recruiter_interface():
             if st.button("Logout"):
                 st.session_state.user = None
                 st.session_state.page = 'login'
-                st.success("Logged out successfully!")
                 st.rerun()
         with col2:
             if st.button("Delete Account"):
-                user_id = st.session_state.user['id']
-                delete_account(user_id)
+                delete_account(st.session_state.user['id'])
                 st.session_state.user = None
                 st.session_state.page = 'login'
-                st.success("Account deleted successfully!")
+                st.success("Account deleted.")
                 st.rerun()
+
+
+
+
+
+
+
+
+
+
+###################################################################################################################################
+
+# WITH SAVED RESUME
+
+# # interfaces/Recruiter.py
+# import streamlit as st
+# import PyPDF2
+# import io
+# import time
+# import pandas as pd
+# import csv  #               <-- Added for manual CSV control
+
+# import zipfile
+# import re
+# from datetime import datetime
+# from io import BytesIO
+
+# from database import (
+#     save_resume, get_user_resumes, download_resume,
+#     clear_resumes, delete_account
+# )
+# from Gemini_services.services import (
+#     parse_job_description, parse_resume_for_recruiter,
+#     compare_job_and_resume, feedback_parse
+# )
+
+# # ----------------------------------------------------------------------
+# # Helper: PDF → plain text
+# # ----------------------------------------------------------------------
+# def pdf_to_text(pdf_file) -> str:
+#     reader = PyPDF2.PdfReader(pdf_file)
+#     text = ""
+#     for page in reader.pages:
+#         text += page.extract_text() or ""
+#     return text
+
+# # ----------------------------------------------------------------------
+# # Helper: TXT → plain text
+# # ----------------------------------------------------------------------
+# def txt_to_text(txt_file) -> str:
+#     return txt_file.read().decode("utf-8")
+
+# # ----------------------------------------------------------------------
+# # BULK SCREENING WITH JOB DESCRIPTION
+# # ----------------------------------------------------------------------
+# def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
+#     """
+#     Returns:
+#         filtered_zip_bytes (bytes)
+#         summary (list of dicts): [{filename, rating, status}]
+#     """
+#     start_time = time.time()
+#     summary = []
+#     filtered_files = {}
+#     job_desc_parsed = parse_job_description(job_description)
+
+#     with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zip_ref:
+#         file_list = [
+#             name for name in zip_ref.namelist()
+#             if not name.startswith("__") and not name.endswith("/") and name.lower().endswith(('.pdf', '.txt'))
+#         ]
+#         total_files = len(file_list)
+#         if total_files == 0:
+#             st.warning("No PDF/TXT files found in the ZIP.")
+#             return io.BytesIO().getvalue(), []
+
+#         progress_bar = st.progress(0)
+#         status_text = st.empty()
+
+#         for idx, file_name in enumerate(file_list):
+#             status_text.text(f"Processing: {file_name} ({idx+1}/{total_files})")
+
+#             with zip_ref.open(file_name) as f:
+#                 file_bytes = f.read()
+#                 file_obj = io.BytesIO(file_bytes)
+
+#                 # Extract text
+#                 try:
+#                     if file_name.lower().endswith(".pdf"):
+#                         resume_text = pdf_to_text(file_obj)
+#                     else:
+#                         resume_text = txt_to_text(file_obj)
+#                 except Exception as e:
+#                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
+#                     continue
+
+#                 # Parse resume
+#                 try:
+#                     resume_parsed = parse_resume_for_recruiter(resume_text)
+#                 except Exception as e:
+#                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
+#                     continue
+
+#                 # Compare
+#                 try:
+#                     comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
+#                 except Exception as e:
+#                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
+#                     continue
+
+#                 # Extract rating
+#                 rating_match = re.search(r"Rating:\s*(\d+)/10", comparison)
+#                 rating = int(rating_match.group(1)) if rating_match else None
+
+#                 status = "Passed" if rating and rating >= 7 else "Rejected"
+#                 summary.append({
+#                     "filename": file_name,
+#                     "rating": f"{rating}/10" if rating else "N/A",
+#                     "status": status
+#                 })
+
+#                 if status == "Passed":
+#                     filtered_files[file_name] = file_bytes
+
+#             progress_bar.progress((idx + 1) / total_files)
+
+#         status_text.empty()
+#         progress_bar.empty()
+
+#     # Build filtered ZIP
+#     filtered_zip = io.BytesIO()
+#     with zipfile.ZipFile(filtered_zip, "w", zipfile.ZIP_DEFLATED) as out_zip:
+#         for name, data in filtered_files.items():
+#             out_zip.writestr(name, data)
+#     filtered_zip.seek(0)
+#     elapsed = time.time() - start_time
+#     st.caption(f"Completed in {elapsed:.1f} seconds")
+#     return filtered_zip.getvalue(), summary
+
+# # ----------------------------------------------------------------------
+# # Main UI
+# # ----------------------------------------------------------------------
+# def recruiter_interface():
+#     st.sidebar.title(f"Welcome, {st.session_state.user['username']}")
+#     menu = ["Homepage", "Bulk Resume Screening", "Profile Check", "Liked Resume", "More"]
+#     choice = st.sidebar.selectbox("Menu", menu)
+
+#     # ------------------------------------------------------------------
+#     # HOMEPAGE
+#     # ------------------------------------------------------------------
+#     if choice == "Homepage":
+#         st.title("Recruiter Homepage")
+#         st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+#         st.markdown("""
+#         ### Unlock the Power of AI-Driven Recruitment
+
+#         As a recruiter, you're here to find the best talent for your organization, and **SkillFit AI** is designed to make that process smarter, faster, and more efficient. Powered by the Gemini API, our platform offers cutting-edge tools to help you evaluate candidates with precision and ease. Whether you're analyzing resumes, comparing them against job descriptions, or managing your favorite candidates, we’ve got you covered.
+
+#         #### What You Can Do Here
+
+#         **SkillFit AI** provides a tailored experience for recruiters through three key sections accessible from the sidebar:
+
+#         1. **Profile Check**  
+#            - **What It Does**: Upload a job description and a candidate’s resume to get a detailed analysis. Our AI extracts key details like job roles, experience, and skills from both documents, compares them, and provides a compatibility rating along with actionable feedback.  
+#            - **Why It’s Useful**: Quickly identify if a candidate is a good fit for the role without manually sifting through documents. The AI-driven comparison ensures you focus on the most relevant candidates, saving you time and effort.  
+#            - **How to Use It**: Navigate to “Profile Check,” upload a job description (TXT) and a resume (PDF or TXT), and click “Analyze” to see the results. You can also save promising resumes for later review.
+
+#         2. **Liked Resume**  
+#            - **What It Does**: View and manage all the resumes you’ve saved from the “Profile Check” section. Download resumes, review their details, or clear the list if needed.  
+#            - **Why It’s Useful**: Keep track of top candidates in one place. This section acts as your personal shortlist, making it easy to revisit and compare your favorite profiles.  
+#            - **How to Use It**: Go to “Liked Resume” to see your saved resumes. Use the “Download” button to retrieve a resume or the “Clear” button to remove all saved resumes.
+
+#         3. **More Options**  
+#            - **What It Does**: Access additional account management features, such as logging out or deleting your account.  
+#            - **Why It’s Useful**: Securely manage your account with ease. If you're done for the day, log out to keep your session safe. Need to remove your account? The “Delete Account” option ensures all your data (including saved resumes) is permanently deleted.  
+#            - **How to Use It**: Navigate to “More,” then choose “Logout” to end your session or “Delete Account” to remove your profile.
+
+#         #### Why Choose SkillFit AI?
+#         - **AI-Powered Insights**: Leverage the Gemini API to parse and analyze documents with unparalleled accuracy.  
+#         - **Time-Saving**: Automate the tedious parts of recruitment, so you can focus on what matters—building great teams.  
+#         - **User-Friendly**: Our intuitive interface ensures you can get started without a steep learning curve.  
+
+#         Ready to find the perfect candidate? Use the sidebar to explore the features and start streamlining your recruitment process today!
+#         """)
+
+#     # ------------------------------------------------------------------
+#     # PROFILE CHECK
+#     # ------------------------------------------------------------------
+#     elif choice == "Profile Check":
+#         st.title("Profile Check")
+#         st.write("Upload the resume and enter a job description to see how well you fit the job.")
+
+#         if "job_description" not in st.session_state:
+#             st.session_state.job_description = ""
+#         job_description = st.text_area(
+#             "Enter Job Description", height=150,
+#             value=st.session_state.job_description,
+#             placeholder="At least mention the Skills, Experience and JobRole"
+#         )
+
+#         if "uploader_key" not in st.session_state:
+#             st.session_state.uploader_key = 0
+#         if "resume_file" not in st.session_state:
+#             st.session_state.resume_file = None
+#         if "resume_filename" not in st.session_state:
+#             st.session_state.resume_filename = None
+
+#         resume_file = st.file_uploader(
+#             "Upload Resume (PDF or TXT)", type=["pdf", "txt"],
+#             key=f"resume_uploader_{st.session_state.uploader_key}"
+#         )
+#         if resume_file:
+#             st.session_state.resume_file = resume_file
+#             st.session_state.resume_filename = resume_file.name
+
+#         if "analysis_results" not in st.session_state:
+#             st.session_state.analysis_results = {
+#                 "job_desc": None, "resume": None,
+#                 "comparison": None, "feedback": None
+#             }
+
+#         st.write(" ")
+#         if st.button("Analyze"):
+#             if not job_description:
+#                 st.error("Please enter a job description.")
+#             elif not resume_file:
+#                 st.error("Please upload your resume.")
+#             else:
+#                 st.session_state.job_description = job_description
+#                 st.session_state.resume_file = resume_file
+
+#                 file_type = resume_file.type
+#                 resume_text = ""
+#                 if file_type == "application/pdf":
+#                     st.write("Processing PDF…")
+#                     resume_text = pdf_to_text(resume_file)
+#                 elif file_type == "text/plain":
+#                     st.write("Processing TXT…")
+#                     resume_text = txt_to_text(resume_file)
+#                 else:
+#                     st.error("Unsupported file format.")
+#                     resume_text = ""
+
+#                 if resume_text:
+#                     job_desc_text = parse_job_description(job_description)
+#                     resume_parsed = parse_resume_for_recruiter(resume_text)
+#                     comparison = compare_job_and_resume(job_desc_text, resume_parsed)
+#                     feedback = feedback_parse(job_desc_text, resume_parsed)
+
+#                     st.session_state.analysis_results = {
+#                         "job_desc": job_desc_text,
+#                         "resume": resume_parsed,
+#                         "comparison": comparison,
+#                         "feedback": feedback
+#                     }
+
+#         if st.session_state.analysis_results["job_desc"] is not None:
+#             col1, col2, col3, col4 = st.columns(4)
+#             with col1:
+#                 if st.button("Job Description"):
+#                     st.session_state.selected_section = "job_desc"
+#             with col2:
+#                 if st.button("Resume"):
+#                     st.session_state.selected_section = "resume"
+#             with col3:
+#                 if st.button("Comparison"):
+#                     st.session_state.selected_section = "comparison"
+#             with col4:
+#                 if st.button("Feedback"):
+#                     st.session_state.selected_section = "feedback"
+
+#             if "selected_section" in st.session_state:
+#                 st.write("---")
+#                 sel = st.session_state.selected_section
+#                 if sel == "job_desc":
+#                     st.text(st.session_state.analysis_results["job_desc"])
+#                 elif sel == "resume":
+#                     st.text(st.session_state.analysis_results["resume"])
+#                 elif sel == "comparison":
+#                     st.write(st.session_state.analysis_results["comparison"])
+#                 elif sel == "feedback":
+#                     st.write(st.session_state.analysis_results["feedback"])
+
+#             col5, col6 = st.columns(2)
+#             with col5:
+#                 if st.button("Clear"):
+#                     st.session_state.job_description = ""
+#                     st.session_state.resume_file = None
+#                     st.session_state.analysis_results = {"job_desc": None, "resume": None,
+#                                                        "comparison": None, "feedback": None}
+#                     st.session_state.uploader_key += 1
+#                     st.rerun()
+#             with col6:
+#                 if st.button("Save"):
+#                     if st.session_state.resume_file:
+#                         resumes = get_user_resumes(st.session_state.user['id'])
+#                         if resumes and any(r[1] == st.session_state.resume_filename for r in resumes):
+#                             st.warning("It's already Liked.")
+#                         else:
+#                             try:
+#                                 save_resume(st.session_state.user['id'], st.session_state.resume_file)
+#                                 st.success(f"Resume '{st.session_state.resume_filename}' saved.")
+#                                 st.session_state.resume_file = None
+#                                 st.rerun()
+#                             except Exception as e:
+#                                 st.error(f"Failed to save resume: {e}")
+#                     else:
+#                         st.error("No resume uploaded to save.")
+
+#     # ------------------------------------------------------------------
+#     # LIKED RESUME
+#     # ------------------------------------------------------------------
+#     elif choice == "Liked Resume":
+#         st.title("Liked Resume")
+#         resumes = get_user_resumes(st.session_state.user['id'])
+#         if resumes:
+#             for resume in resumes:
+#                 content = resume[3]
+#                 upload_date = datetime.strptime(resume[2], "%Y-%m-%d %H:%M:%S.%f")
+#                 formatted_date = upload_date.strftime("%Y-%m-%d at %I:%M %p")
+#                 st.subheader(resume[1])
+#                 st.write(f"Saved on: {formatted_date}")
+#                 st.download_button(
+#                     label="Download Resume",
+#                     data=BytesIO(content),
+#                     file_name=resume[1]
+#                 )
+#                 if resume[4]:
+#                     st.write("Analysis:", resume[4])
+
+#             col1, col2 = st.columns(2)
+#             with col1:
+#                 if st.button("Clear"):
+#                     clear_resumes(st.session_state.user['id'])
+#                     st.success("All liked resumes cleared!")
+#                     st.rerun()
+#         else:
+#             st.write("No resumes saved yet.")
+
+#     # ------------------------------------------------------------------
+#     # BULK RESUME SCREENING – FINAL & FIXED
+#     # ------------------------------------------------------------------
+#     elif choice == "Bulk Resume Screening":
+#         st.title("Bulk Resume Screening")
+#         st.write(
+#             "Upload a **job description** and a **ZIP of resumes**. "
+#             "The AI will evaluate each resume and return only those scoring **≥ 7/10**."
+#         )
+
+#         # === Initialize Session State ===
+#         if "bulk_job_description" not in st.session_state:
+#             st.session_state.bulk_job_description = ""
+#         if "bulk_zip_file" not in st.session_state:
+#             st.session_state.bulk_zip_file = None
+#         if "bulk_results" not in st.session_state:
+#             st.session_state.bulk_results = None
+
+#         # === Input Section ===
+#         job_description = st.text_area(
+#             "Enter Job Description (required)",
+#             height=150,
+#             value=st.session_state.bulk_job_description,
+#             placeholder="Paste the full job description here...",
+#             key="bulk_jd_input"
+#         )
+
+#         zip_file = st.file_uploader(
+#             "Upload ZIP of Resumes (PDF/TXT)",
+#             type=["zip"],
+#             key="bulk_zip_uploader"
+#         )
+#         if zip_file is not None:
+#             st.session_state.bulk_zip_file = zip_file
+
+#         # === Start Button ===
+#         if st.button("Start Screening", type="primary", key="start_bulk"):
+#             if not job_description.strip():
+#                 st.error("Please enter a job description.")
+#             elif not zip_file:
+#                 st.error("Please upload a ZIP file.")
+#             else:
+#                 st.session_state.bulk_job_description = job_description
+#                 zip_bytes = zip_file.read()
+
+#                 with st.spinner("Screening resumes..."):
+#                     filtered_zip, summary = screen_bulk_resumes_with_jd(
+#                         zip_bytes, job_description, st.session_state.user['id']
+#                     )
+#                 st.session_state.bulk_results = {
+#                     "filtered_zip": filtered_zip,
+#                     "summary": summary
+#                 }
+#                 st.success("Screening complete!")
+
+#         # === RESULTS SECTION ===
+#         if st.session_state.bulk_results:
+#             st.markdown("---")
+#             st.subheader("Screening Results")
+
+#             # Table
+#             results = [
+#                 {"File": s["filename"], "Rating": s["rating"], "Status": s["status"]}
+#                 for s in st.session_state.bulk_results["summary"]
+#             ]
+#             df_results = pd.DataFrame(results)
+#             st.dataframe(df_results, use_container_width=True)
+
+#             # Stats
+#             passed_count = len([s for s in results if s["Status"] == "Passed"])
+#             if passed_count > 0:
+#                 st.success(f"**{passed_count} resume(s)** passed (≥ 7/10)")
+
+#                 # ZIP Download
+#                 st.download_button(
+#                     label=f"Download Filtered Zip file",
+#                     data=st.session_state.bulk_results["filtered_zip"],
+#                     file_name="filtered_top_resumes.zip",
+#                     mime="application/zip",
+#                     key="download_filtered_bulk"
+#                 )
+
+#                 # CSV Download – NO DATES! (Forced as text)
+#                 csv_buffer = io.StringIO()
+#                 writer = csv.writer(csv_buffer)
+#                 writer.writerow(["File", "Rating", "Status"])
+#                 for s in st.session_state.bulk_results["summary"]:
+#                     rating_text = f'="{s["rating"]}"'  # Excel-safe
+#                     writer.writerow([s["filename"], rating_text, s["status"]])
+
+#                 st.download_button(
+#                     label="Download Results as CSV",
+#                     data=csv_buffer.getvalue(),
+#                     file_name="screening_results.csv",
+#                     mime="text/csv",
+#                     key="download_csv_bulk"
+#                 )
+#             else:
+#                 st.warning("No resumes met the ≥ 7/10 threshold.")
+
+#             # === CLEAR BUTTON – BOTTOM-RIGHT ===
+#             st.markdown("---")
+#             if st.button("Clear", type="secondary", key="clear_results_final"):
+#                 st.session_state.bulk_job_description = ""
+#                 st.session_state.bulk_zip_file = None
+#                 st.session_state.bulk_results = None
+#                 st.rerun()
+
+#     # ------------------------------------------------------------------
+#     # MORE
+#     # ------------------------------------------------------------------
+#     elif choice == "More":
+#         st.title("More Options")
+#         col1, col2 = st.columns(2)
+#         with col1:
+#             if st.button("Logout"):
+#                 st.session_state.user = None
+#                 st.session_state.page = 'login'
+#                 st.success("Logged out successfully!")
+#                 st.rerun()
+#         with col2:
+#             if st.button("Delete Account"):
+#                 user_id = st.session_state.user['id']
+#                 delete_account(user_id)
+#                 st.session_state.user = None
+#                 st.session_state.page = 'login'
+#                 st.success("Account deleted successfully!")
+#                 st.rerun()
 
 
 

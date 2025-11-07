@@ -36,37 +36,37 @@ def init_db():
                 continue
             raise Exception("Database initialization failed: Tables 'users' or 'resumes' are missing or misconfigured. Please create them in the Supabase dashboard with the correct schema: 'users' (id, email, username, password, user_type, created_at) and 'resumes' (id, user_id, filename, file_content, upload_date, analysis).")
 
-def save_resume(user_id, file):
-    filename = file.name
-    file_content = file.getvalue()  # Raw bytes for BYTEA column
-    upload_date = datetime.now().isoformat()
-    supabase.table("resumes").insert({
-        "user_id": user_id,
-        "filename": filename,
-        "file_content": file_content,
-        "upload_date": upload_date
-    }).execute()
+# def save_resume(user_id, file):
+#     filename = file.name
+#     file_content = file.getvalue()  # Raw bytes for BYTEA column
+#     upload_date = datetime.now().isoformat()
+#     supabase.table("resumes").insert({
+#         "user_id": user_id,
+#         "filename": filename,
+#         "file_content": file_content,
+#         "upload_date": upload_date
+#     }).execute()
 
-def get_user_resumes(user_id):
-    response = supabase.table("resumes").select("*").eq("user_id", user_id).execute()
-    resumes = response.data
-    parsed_resumes = []
-    for resume in resumes:
-        print(f"Raw file_content length: {len(resume['file_content'])}, sample: {resume['file_content'][:10]}")
-        file_content = resume["file_content"]  # Already bytes from BYTEA
-        parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
-    return parsed_resumes
+# def get_user_resumes(user_id):
+#     response = supabase.table("resumes").select("*").eq("user_id", user_id).execute()
+#     resumes = response.data
+#     parsed_resumes = []
+#     for resume in resumes:
+#         print(f"Raw file_content length: {len(resume['file_content'])}, sample: {resume['file_content'][:10]}")
+#         file_content = resume["file_content"]  # Already bytes from BYTEA
+#         parsed_resumes.append((resume["id"], resume["filename"], resume["upload_date"], file_content, resume["analysis"]))
+#     return parsed_resumes
 
-def download_resume(resume_id):
-    response = supabase.table("resumes").select("filename, file_content").eq("id", resume_id).execute()
-    data = response.data
-    if data:
-        file_content = data[0]["file_content"]  # Already bytes from BYTEA
-        return data[0]["filename"], file_content
-    return None, None
+# def download_resume(resume_id):
+#     response = supabase.table("resumes").select("filename, file_content").eq("id", resume_id).execute()
+#     data = response.data
+#     if data:
+#         file_content = data[0]["file_content"]  # Already bytes from BYTEA
+#         return data[0]["filename"], file_content
+#     return None, None
 
-def clear_resumes(user_id):
-    supabase.table("resumes").delete().eq("user_id", user_id).execute()
+# def clear_resumes(user_id):
+#     supabase.table("resumes").delete().eq("user_id", user_id).execute()
 
 def delete_account(user_id):
     supabase.table("resumes").delete().eq("user_id", user_id).execute()
