@@ -116,7 +116,7 @@ def recruiter_interface():
     # HOMEPAGE
     if choice == "Homepage":
         st.title("Recruiter Homepage")
-        st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+        # st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
         st.markdown("""
         ### Welcome to SkillFit AI — The Smartest Way to Hire
 
