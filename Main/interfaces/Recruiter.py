@@ -151,14 +151,6 @@ def recruiter_interface():
         - **Powered by Google Gemini** — enterprise-grade AI, zero fluff
 
 
-        #### Real Results
-        > “I screened 180 resumes in 94 seconds. Got 11 perfect matches. Hired 3 in a week.”  
-        > — Sarah K., Tech Recruiter @ StartupHub
-
-        > “Finally, a tool that doesn't make me manage a ‘maybe' list.”  
-        > — Ahmed R., HR Lead
-
-
         **You're one click away from hiring smarter.**
 
         Use the sidebar → Pick **Profile Check** or **Bulk Screening** → Watch the magic happen.
