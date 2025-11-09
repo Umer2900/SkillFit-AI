@@ -520,9 +520,79 @@ def recruiter_interface():
         </p>
         """, unsafe_allow_html=True)
 
-    # === PROFILE CHECK (UNCHANGED LOGIC, CLEAN UI) ===
+    # # === PROFILE CHECK (UNCHANGED LOGIC, CLEAN UI) ===
+    # elif choice == "Profile Check":
+    #     st.markdown("<h1 style='color: #1e40af; text-align: center;'>Profile Check</h1>", unsafe_allow_html=True)
+    #     st.write("Upload a resume + job description → Get instant AI-powered match score.")
+
+    #     if "job_description" not in st.session_state:
+    #         st.session_state.job_description = ""
+    #     job_description = st.text_area(
+    #         "Enter Job Description", height=150,
+    #         value=st.session_state.job_description,
+    #         placeholder="Paste full JD here..."
+    #     )
+
+    #     if "uploader_key" not in st.session_state:
+    #         st.session_state.uploader_key = 0
+    #     resume_file = st.file_uploader(
+    #         "Upload Resume (PDF/TXT)", type=["pdf", "txt"],
+    #         key=f"resume_uploader_{st.session_state.uploader_key}"
+    #     )
+
+    #     if "analysis_results" not in st.session_state:
+    #         st.session_state.analysis_results = {"job_desc": None, "resume": None, "comparison": None, "feedback": None}
+
+    #     if st.button("Analyze Resume", use_container_width=True, type="primary"):
+    #         if not job_description.strip():
+    #             st.error("Job description required.")
+    #         elif not resume_file:
+    #             st.error("Resume required.")
+    #         else:
+    #             st.session_state.job_description = job_description
+    #             resume_text = pdf_to_text(resume_file) if resume_file.type == "application/pdf" else txt_to_text(resume_file)
+
+    #             if resume_text.strip():
+    #                 with st.spinner("AI is analyzing..."):
+    #                     job_desc_text = parse_job_description(job_description)
+    #                     resume_parsed = parse_resume_for_recruiter(resume_text)
+    #                     comparison = compare_job_and_resume(job_desc_text, resume_parsed)
+    #                     feedback = feedback_parse(job_desc_text, resume_parsed)
+
+    #                 st.session_state.analysis_results = {
+    #                     "job_desc": job_desc_text,
+    #                     "resume": resume_parsed,
+    #                     "comparison": comparison,
+    #                     "feedback": feedback
+    #                 }
+    #                 st.success("Analysis complete!")
+
+    #     if st.session_state.analysis_results["job_desc"]:
+    #         cols = st.columns(4)
+    #         sections = ["job_desc", "resume", "comparison", "feedback"]
+    #         labels = ["Job Description", "Resume", "Comparison", "Feedback"]
+    #         for col, sec, label in zip(cols, sections, labels):
+    #             with col:
+    #                 if st.button(label, use_container_width=True):
+    #                     st.session_state.selected_section = sec
+
+    #         if "selected_section" in st.session_state:
+    #             st.markdown("---")
+    #             sel = st.session_state.selected_section
+    #             content = st.session_state.analysis_results[sel]
+    #             if sel in ["job_desc", "resume"]:
+    #                 st.code(content, language="text")
+    #             else:
+    #                 st.markdown(content)
+
+    #         if st.button("Clear All", use_container_width=True, type="secondary"):
+    #             st.session_state.analysis_results = {"job_desc": None, "resume": None, "comparison": None, "feedback": None}
+    #             st.session_state.uploader_key += 1
+    #             st.rerun()
+
+    # === PROFILE CHECK — ALL OUTPUTS NOW IN CLEAN TEXT (NO CODE BLOCKS) ===
     elif choice == "Profile Check":
-        st.markdown("<h1 style='color: #1e40af; text-align: center;'>Profile Check</h1>", unsafe_allow_html=True)
+        st.markdown("< grazie style='color: #1e40af; text-align: center;'>Profile Check</h1>", unsafe_allow_html=True)
         st.write("Upload a resume + job description → Get instant AI-powered match score.")
 
         if "job_description" not in st.session_state:
@@ -580,15 +650,27 @@ def recruiter_interface():
                 st.markdown("---")
                 sel = st.session_state.selected_section
                 content = st.session_state.analysis_results[sel]
-                if sel in ["job_desc", "resume"]:
-                    st.code(content, language="text")
-                else:
-                    st.markdown(content)
+
+                # ALL NOW DISPLAYED AS CLEAN, NON-COPYABLE TEXT
+                if sel == "job_desc":
+                    st.markdown("### Parsed Job Description")
+                    st.write(content)
+                elif sel == "resume":
+                    st.markdown("### Parsed Resume")
+                    st.write(content)
+                elif sel == "comparison":
+                    st.markdown("### AI Comparison & Match Score")
+                    st.write(content)
+                elif sel == "feedback":
+                    st.markdown("### AI Feedback & Recommendations")
+                    st.write(content)
 
             if st.button("Clear All", use_container_width=True, type="secondary"):
                 st.session_state.analysis_results = {"job_desc": None, "resume": None, "comparison": None, "feedback": None}
                 st.session_state.uploader_key += 1
                 st.rerun()
+
+
 
     # === BULK SCREENING (UNCHANGED LOGIC, BETTER UI) ===
     elif choice == "Bulk Resume Screening":
