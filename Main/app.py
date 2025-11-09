@@ -210,10 +210,8 @@ def main():
 
         # LOGIN PAGE
         if st.session_state.page == 'login':
-            st.markdown("### Welcome Back")
-
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+            email = st.text_input("Email", placeholder="abc@example.com")
+            password = st.text_input("Password", type="password", placeholder="••••••••")
 
             if st.button("Login", use_container_width=True, type="primary"):
                 if not email or not password:
@@ -245,9 +243,9 @@ def main():
         elif st.session_state.page == 'signup':
             st.markdown("### Create Your Account")
 
-            username = st.text_input("Username")
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+            username = st.text_input("Username", placeholder="umer2900")
+            email = st.text_input("Email", placeholder="abc@example.com")
+            password = st.text_input("Password", type="password", placeholder="6+ characters")
             user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
 
             if st.button("Send Verification Code", use_container_width=True, type="primary"):
