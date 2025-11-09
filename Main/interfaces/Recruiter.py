@@ -592,7 +592,7 @@ def recruiter_interface():
 
     # === PROFILE CHECK — ALL OUTPUTS NOW IN CLEAN TEXT (NO CODE BLOCKS) ===
     elif choice == "Profile Check":
-        st.markdown("< grazie style='color: #1e40af; text-align: center;'>Profile Check</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #1e40af; text-align: center;'>Profile Check</h1>", unsafe_allow_html=True)
         st.write("Upload a resume + job description → Get instant AI-powered match score.")
 
         if "job_description" not in st.session_state:
