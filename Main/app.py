@@ -145,7 +145,7 @@ def send_verification_email(email, code):
 
 
 
-# app.py - FINAL BEAUTIFUL & WORKING VERSION
+# app.py - FINAL VERSION: LINKS WORK IN SAME TAB
 import streamlit as st
 from auth import check_credentials, create_user
 from database import init_db
@@ -177,8 +177,8 @@ def generate_verification_code():
 
 def send_verification_email(email, code):
     try:
-        msg = MIMEText(f"Your SkillFit AI verification code is:\n\n{code}\n\nWelcome to the future of hiring!")
-        msg['Subject'] = 'SkillFit AI - Your Verification Code'
+        msg = MIMEText(f"Your SkillFit AI verification code is:\n\n{code}\n\nWelcome aboard!")
+        msg['Subject'] = 'SkillFit AI - Verification Code'
         msg['From'] = st.secrets["GMAIL_USER"]
         msg['To'] = email
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
@@ -191,6 +191,13 @@ def send_verification_email(email, code):
 
 # === MAIN UI ===
 def main():
+    # Read URL params
+    query_params = st.query_params
+    if query_params.get("page") == "signup":
+        st.session_state.page = 'signup'
+    elif query_params.get("page") == "login":
+        st.session_state.page = 'login'
+
     if st.session_state.user is None:
         # === TITLE ===
         st.markdown("<h1 style='text-align: center; color: #1e40af; font-size: 52px; font-weight: 900;'>SkillFit AI</h1>", unsafe_allow_html=True)
@@ -205,7 +212,7 @@ def main():
 
             if st.button("Login", use_container_width=True, type="primary"):
                 if not email or not password:
-                    st.error("Please fill both fields")
+                    st.error("Fill both fields")
                 else:
                     user = check_credentials(email, password)
                     if user:
@@ -216,19 +223,24 @@ def main():
                         st.success("Welcome back!")
                         st.rerun()
                     else:
-                        st.error("Invalid email or password")
+                        st.error("Wrong email/password")
 
-            # === WORKING SIGNUP LINK ===
+            # === WORKING LINK - SAME TAB ===
             st.markdown("""
             <div style="text-align: center; margin-top: 30px; font-size: 16px;">
                 Don't have an account? 
-                <a href="?signup" style="color: #2563eb; font-weight: bold; text-decoration: none;">Sign up here</a>
+                <a href="javascript:void(0)" 
+                   onclick="document.getElementById('signup_trigger').click()" 
+                   style="color: #2563eb; font-weight: bold; text-decoration: none;">
+                   Sign up here
+                </a>
             </div>
             """, unsafe_allow_html=True)
 
-            # Detect URL change
-            if st.query_params.get("signup"):
+            # Hidden trigger
+            if st.button("Go to Signup", key="signup_trigger", help="Triggered by link"):
                 st.session_state.page = 'signup'
+                st.query_params["page"] = "signup"
                 st.rerun()
 
         # === SIGNUP PAGE ===
@@ -255,26 +267,31 @@ def main():
                     code = generate_verification_code()
                     st.session_state.verification_code = code
                     if send_verification_email(email, code):
-                        st.success("Code sent! Check your email")
+                        st.success("Code sent!")
                         st.session_state.page = 'verify'
                         st.rerun()
 
-            # === WORKING LOGIN LINK ===
+            # === WORKING LOGIN LINK - SAME TAB ===
             st.markdown("""
             <div style="text-align: center; margin-top: 30px; font-size: 16px;">
                 Already have an account? 
-                <a href="?login" style="color: #2563eb; font-weight: bold; text-decoration: none;">Log in</a>
+                <a href="javascript:void(0)" 
+                   onclick="document.getElementById('login_trigger').click()" 
+                   style="color: #2563eb; font-weight: bold; text-decoration: none;">
+                   Log in
+                </a>
             </div>
             """, unsafe_allow_html=True)
 
-            if st.query_params.get("login"):
+            if st.button("Go to Login", key="login_trigger"):
                 st.session_state.page = 'login'
+                st.query_params["page"] = "login"
                 st.rerun()
 
         # === VERIFY PAGE ===
         elif st.session_state.page == 'verify':
             st.markdown("### Verify Your Email")
-            st.info("Check your inbox for the 6-digit code")
+            st.info("Check your email for the 6-digit code")
 
             code = st.text_input("Enter code", placeholder="123456")
 
@@ -282,17 +299,16 @@ def main():
                 if code == st.session_state.verification_code:
                     data = st.session_state.signup_data
                     if create_user(data['username'], data['email'], data['password'], data['user_type']):
-                        st.success("Account created! Logging you in...")
+                        st.success("Account created! Logging in...")
                         st.session_state.clear()
                         st.session_state.page = 'login'
                         st.rerun()
                     else:
-                        st.error("Email already registered")
+                        st.error("Email already used")
                 else:
                     st.error("Wrong code")
 
     else:
-        # Logged in
         if st.session_state.user['user_type'] == "Recruiter":
             recruiter_interface()
         else:
