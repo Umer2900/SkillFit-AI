@@ -1,4 +1,5 @@
 # SkillFit AI
+**AI-Powered Resume Screening & Job Matching Platform**
 
 [**Live Demo**](https://skillfit-ai.streamlit.app/)
 
@@ -6,6 +7,7 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 <br>
 
 ## Table of Contents
+- [Why SkillFit AI Exists](#exists)
 - [Features](#features)
 - [Usage](#usage)
 - [Technologies Used](#technologies-used)
@@ -14,22 +16,55 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 
 <br>
 
+---
+
+## Why SkillFit AI Exists
+
+Recruiters waste **10+ hours** per role reading bad resumes.  
+Candidates apply to **100 jobs** → get **0 replies**.  
+
+**We fixed both.**
+
+- **For Recruiters**: Upload a ZIP of resumes + job description → Get **only the best matches** (≥7/10)  
+- **For Candidates**: Upload your resume → Get **5 perfect jobs** with direct apply links  
+
+**No resume is ever saved. Privacy by design.**
+
+
+---
+
 ## Features
 
-### Recruiter Interface
-- **Job Description Parsing**: Extracts key details (Job Role, Experience, Skills) from job descriptions.
-- **Resume Parsing**: Analyzes candidate resumes to extract Job Role, detailed Experience, and Skills.
-- **Comparison & Feedback**: Compares resumes to job descriptions with a detailed rating (e.g., Job Role Match, Experience Match, Skills Match) and provides actionable feedback.
-- **Save Resumes**: Allows recruiters to save promising resumes for later review in the "Liked Resume" section.
+### Recruiter Side (The Power Tool)
 
-### Candidate Interface
-- **Resume Parsing**: Extracts Job Role, Experience (with weighted importance), and Skills from candidate resumes.
-- **Job Recommendations**: Matches resumes to a dataset of job descriptions (`job_descriptions.csv`) using TF-IDF and cosine similarity, recommending the top 5 jobs with clickable application links.
+**Bulk Resume Screening** *(Star Feature)*  
+- Upload **ZIP with 500+ resumes** (PDF/TXT)  
+- Paste job description  
+- AI scores every resume vs JD  
+- **Download only Passed (≥7/10)** as:  
+  → `filtered_top_resumes.zip`  
+  → `screening_results.csv` (Rating shown as `10/10` — no date bugs!)  
+- Live progress bar + processing status  
+- **Clear button** → Everything gone in 1 click  
+
+**Profile Check**  
+- Upload 1 resume + JD → Get instant 10/10 score  
+- View parsed JD, resume, comparison, feedback  
+- No "Save" button — **zero clutter**
+
+### Candidate Side (Your Career GPS)
+
+**Job Recommendation System**  
+- Upload resume → AI extracts skills, experience, role  
+- Matches against **10,000+ real jobs** (scraped from Naukri)  
+- Returns **Top 5 perfect matches** with:  
+  → Company | Role | Skills Match | **Apply Link** (clickable)  
+- From blind applications → **sniper precision**
 
 ### General Features
 - **User Authentication**: Supports user signup and login for recruiters and candidates.
-- **Account Management**: Users can log out or delete their accounts, including all associated data (e.g., saved resumes).
-- **AI-Powered**: Utilizes the Gemini API for intelligent text parsing and analysis.
+- **Account Management**: Users can log out or delete their accounts.
+---
 
 <br>
 
@@ -52,16 +87,24 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 
 <br>
 
-## Technologies Used
+---
 
-- **Frontend**: Streamlit
-- **Backend**: Python
-- **Resume Analysis**: Gemini API for extracting skills, experience, and job roles
-- **Job Matching**: NLP techniques using `TfidfVectorizer` and `cosine_similarity` from `scikit-learn`
-- **Web Scraping**: Libraries like `beautifulsoup4` and `requests` for scraping job listings from Naukri.com
-- **Email Service**: SMTP (Gmail) for sending verification codes
-- **Database**: Supabase
-- **Environment Variables**: Streamlit env
+## Tech Stack (100% Python)
+
+| Layer           | Technology                     |
+|-----------------|--------------------------------|
+| Frontend        | Streamlit                      |
+| AI Brain        | Google Gemini Pro API          |
+| Backend         | Python (PyPDF2, zipfile, pandas, csv) |
+| Web Scraping    | Libraries like `beautifulsoup4` and `requests` for scraping job listings from Naukri.com |
+| Database        | Supabase (auth only)           |
+| Auth            | Email + SHA-256                |
+| Deployment      | Streamlit Cloud                |
+| File Processing | In-memory (BytesIO) — **no storage** |
+
+**Zero JavaScript. Zero bloat. Pure speed.**
+
+---
 
 <br>
 
@@ -73,8 +116,8 @@ SkillFit-AI/<br>
 │   │   └── gemini_services.py<br>
 │   │<br>
 │   ├── interfaces/  <br>
-│   │   ├── Recruiter.py<br>
-│   │   └── Candidate.py<br>
+│   │   ├── Recruiter.py    ← Bulk + Profile Check<br>
+│   │   └── Candidate.py    ← Job Recommendations<br>
 │   │<br>
 │   ├── Web_Scrapping/  <br>
 │   │   ├── job_descriptions.csv<br>
@@ -84,7 +127,7 @@ SkillFit-AI/<br>
 │   ├── .gitignore <br>
 │   ├── app.py  <br>
 │   ├── auth.py <br>
-│   ├── database.py<br>
+│   ├── database.py   ← Only auth + delete<br>
 │   ├── requirements.txt <br>
 │<br>
 ├── README.md <br>
@@ -127,9 +170,6 @@ To run SkillFit AI locally, ensure you have the following installed:
    ```
 
 4. **Configure Environment Variables**:
-* Create a .env file in the root directory.
-* Add your Gemini API key:
-GEMINI_API_KEY=your-api-key-here
 
    Create a `.env` file in the project root and add the following:
    ```plaintext
@@ -139,7 +179,7 @@ GEMINI_API_KEY=your-api-key-here
 
    [supabase]
    url = "https://your-supabase-url.supabase.co"
-   key = "your-supabase-key.here
+   key = "your-supabase-anon-key"
    ```
    Replace `your-email@gmail.com` with your Gmail address, `your-app-password` with a Gmail App Password (generate one in your Google Account settings), and `your-gemini-api-key` with your Gemini API key.
 
