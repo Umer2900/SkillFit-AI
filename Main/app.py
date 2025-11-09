@@ -145,7 +145,7 @@ def send_verification_email(email, code):
 
 
 
-# app.py - FINAL VERSION: LINKS WORK IN SAME TAB
+# app.py - FINAL: REAL BLUE LINKS THAT WORK IN SAME TAB (NO BUTTONS, NO NEW TAB)
 import streamlit as st
 from auth import check_credentials, create_user
 from database import init_db
@@ -177,38 +177,40 @@ def generate_verification_code():
 
 def send_verification_email(email, code):
     try:
-        msg = MIMEText(f"Your SkillFit AI verification code is:\n\n{code}\n\nWelcome aboard!")
-        msg['Subject'] = 'SkillFit AI - Verification Code'
+        msg = MIMEText(f"Your SkillFit AI code: {code}")
+        msg['Subject'] = 'SkillFit AI - Verify Email'
         msg['From'] = st.secrets["GMAIL_USER"]
         msg['To'] = email
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
             server.send_message(msg)
         return True
-    except Exception as e:
-        st.error(f"Email failed: {e}")
+    except:
+        st.error("Email failed")
         return False
 
-# === MAIN UI ===
+# === MAIN ===
 def main():
-    # Read URL params
-    query_params = st.query_params
-    if query_params.get("page") == "signup":
-        st.session_state.page = 'signup'
-    elif query_params.get("page") == "login":
-        st.session_state.page = 'login'
+    # Check URL parameter ONCE at top
+    params = st.query_params
+    if params.get("page") == "signup":
+        st.session_state.page = "signup"
+        st.query_params.clear()
+    elif params.get("page") == "login":
+        st.session_state.page = "login"
+        st.query_params.clear()
 
     if st.session_state.user is None:
-        # === TITLE ===
-        st.markdown("<h1 style='text-align: center; color: #1e40af; font-size: 52px; font-weight: 900;'>SkillFit AI</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #555; font-size: 20px; margin-bottom: 40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
+        # TITLE
+        st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#555; font-size:20px; margin-bottom:40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
 
-        # === LOGIN PAGE ===
+        # LOGIN PAGE
         if st.session_state.page == 'login':
             st.markdown("### Welcome Back")
 
-            email = st.text_input("Email", placeholder="umer@example.com")
-            password = st.text_input("Password", type="password", placeholder="••••••••")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
             if st.button("Login", use_container_width=True, type="primary"):
                 if not email or not password:
@@ -216,40 +218,29 @@ def main():
                 else:
                     user = check_credentials(email, password)
                     if user:
-                        st.session_state.user = {
-                            'id': user['id'], 'email': user['email'],
-                            'username': user['username'], 'user_type': user['user_type']
-                        }
-                        st.success("Welcome back!")
+                        st.session_state.user = user
+                        st.success("Logged in!")
                         st.rerun()
                     else:
-                        st.error("Wrong email/password")
+                        st.error("Wrong credentials")
 
-            # === WORKING LINK - SAME TAB ===
+            # REAL WORKING LINK - SAME TAB
             st.markdown("""
-            <div style="text-align: center; margin-top: 30px; font-size: 16px;">
+            <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Don't have an account? 
-                <a href="javascript:void(0)" 
-                   onclick="document.getElementById('signup_trigger').click()" 
-                   style="color: #2563eb; font-weight: bold; text-decoration: none;">
-                   Sign up here
+                <a href="/?page=signup" style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                    Sign up here
                 </a>
             </div>
             """, unsafe_allow_html=True)
 
-            # Hidden trigger
-            if st.button("Go to Signup", key="signup_trigger", help="Triggered by link"):
-                st.session_state.page = 'signup'
-                st.query_params["page"] = "signup"
-                st.rerun()
-
-        # === SIGNUP PAGE ===
+        # SIGNUP PAGE
         elif st.session_state.page == 'signup':
-            st.markdown("### Create Your Account")
+            st.markdown("### Create Account")
 
-            username = st.text_input("Username", placeholder="umer2900")
-            email = st.text_input("Email", placeholder="umer@example.com")
-            password = st.text_input("Password", type="password", placeholder="6+ characters")
+            username = st.text_input("Username")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
             user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
 
             if st.button("Send Verification Code", use_container_width=True, type="primary"):
@@ -260,10 +251,7 @@ def main():
                 elif len(password) < 6:
                     st.error("Password too short")
                 else:
-                    st.session_state.signup_data = {
-                        'username': username, 'email': email,
-                        'password': password, 'user_type': user_type
-                    }
+                    st.session_state.signup_data = {"username": username, "email": email, "password": password, "user_type": user_type}
                     code = generate_verification_code()
                     st.session_state.verification_code = code
                     if send_verification_email(email, code):
@@ -271,35 +259,27 @@ def main():
                         st.session_state.page = 'verify'
                         st.rerun()
 
-            # === WORKING LOGIN LINK - SAME TAB ===
+            # REAL WORKING LOGIN LINK
             st.markdown("""
-            <div style="text-align: center; margin-top: 30px; font-size: 16px;">
+            <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Already have an account? 
-                <a href="javascript:void(0)" 
-                   onclick="document.getElementById('login_trigger').click()" 
-                   style="color: #2563eb; font-weight: bold; text-decoration: none;">
-                   Log in
+                <a href="/?page=login" style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                    Log in
                 </a>
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("Go to Login", key="login_trigger"):
-                st.session_state.page = 'login'
-                st.query_params["page"] = "login"
-                st.rerun()
-
-        # === VERIFY PAGE ===
+        # VERIFY PAGE
         elif st.session_state.page == 'verify':
-            st.markdown("### Verify Your Email")
-            st.info("Check your email for the 6-digit code")
+            st.markdown("### Verify Email")
+            st.info("Check your email")
 
-            code = st.text_input("Enter code", placeholder="123456")
-
-            if st.button("Verify & Create Account", use_container_width=True, type="primary"):
+            code = st.text_input("6-digit code")
+            if st.button("Verify", use_container_width=True, type="primary"):
                 if code == st.session_state.verification_code:
                     data = st.session_state.signup_data
                     if create_user(data['username'], data['email'], data['password'], data['user_type']):
-                        st.success("Account created! Logging in...")
+                        st.success("Done! Logging in...")
                         st.session_state.clear()
                         st.session_state.page = 'login'
                         st.rerun()
