@@ -243,7 +243,7 @@ def main():
         elif st.session_state.page == 'signup':
             st.markdown("### Create Your Account")
 
-            username = st.text_input("Username", placeholder="umer2900")
+            username = st.text_input("Username", placeholder="Enter your username")
             email = st.text_input("Email", placeholder="abc@example.com")
             password = st.text_input("Password", type="password", placeholder="6+ characters")
             user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
