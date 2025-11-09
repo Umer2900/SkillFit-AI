@@ -11,7 +11,6 @@ import re
 from datetime import datetime
 from io import BytesIO
 
-# Removed: save_resume, get_user_resumes, clear_resumes
 from database import delete_account
 
 from Gemini_services.services import (
