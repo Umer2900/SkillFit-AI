@@ -145,7 +145,7 @@
 
 
 
-# app.py - FINAL: REAL BLUE LINKS THAT WORK IN SAME TAB (NO BUTTONS, NO NEW TAB)
+# app.py - FINAL: REAL LINKS THAT WORK IN SAME TAB (NO NEW TAB, NO BUTTONS)
 import streamlit as st
 from auth import check_credentials, create_user
 from database import init_db
@@ -177,7 +177,7 @@ def generate_verification_code():
 
 def send_verification_email(email, code):
     try:
-        msg = MIMEText(f"Your SkillFit AI code: {code}")
+        msg = MIMEText(f"Your SkillFit AI verification code:\n\n{code}")
         msg['Subject'] = 'SkillFit AI - Verify Email'
         msg['From'] = st.secrets["GMAIL_USER"]
         msg['To'] = email
@@ -191,15 +191,18 @@ def send_verification_email(email, code):
 
 # === MAIN ===
 def main():
-    # Check URL parameter ONCE at top
+    # === READ URL PARAMS AT THE VERY TOP ===
     params = st.query_params
     if params.get("page") == "signup":
         st.session_state.page = "signup"
         st.query_params.clear()
+        st.rerun()
     elif params.get("page") == "login":
         st.session_state.page = "login"
         st.query_params.clear()
+        st.rerun()
 
+    # === ONLY SHOW UI IF NOT LOGGED IN ===
     if st.session_state.user is None:
         # TITLE
         st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
@@ -218,25 +221,29 @@ def main():
                 else:
                     user = check_credentials(email, password)
                     if user:
-                        st.session_state.user = user
+                        st.session_state.user = {
+                            'id': user['id'], 'email': user['email'],
+                            'username': user['username'], 'user_type': user['user_type']
+                        }
                         st.success("Logged in!")
                         st.rerun()
                     else:
                         st.error("Wrong credentials")
 
-            # REAL WORKING LINK - SAME TAB
+            # REAL LINK — SAME TAB ONLY
             st.markdown("""
             <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Don't have an account? 
-                <a href="/?page=signup" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                    Sign up here
+                <a href="/?page=signup" 
+                   style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                   Sign up here
                 </a>
             </div>
             """, unsafe_allow_html=True)
 
         # SIGNUP PAGE
         elif st.session_state.page == 'signup':
-            st.markdown("### Create Account")
+            st.markdown("### Create Your Account")
 
             username = st.text_input("Username")
             email = st.text_input("Email")
@@ -259,12 +266,13 @@ def main():
                         st.session_state.page = 'verify'
                         st.rerun()
 
-            # REAL WORKING LOGIN LINK
+            # REAL LOGIN LINK — SAME TAB
             st.markdown("""
             <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Already have an account? 
-                <a href="/?page=login" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                    Log in
+                <a href="/?page=login" 
+                   style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                   Log in
                 </a>
             </div>
             """, unsafe_allow_html=True)
@@ -272,14 +280,14 @@ def main():
         # VERIFY PAGE
         elif st.session_state.page == 'verify':
             st.markdown("### Verify Email")
-            st.info("Check your email")
+            st.info("Check your email for the 6-digit code")
 
-            code = st.text_input("6-digit code")
+            code = st.text_input("Enter code")
             if st.button("Verify", use_container_width=True, type="primary"):
                 if code == st.session_state.verification_code:
                     data = st.session_state.signup_data
                     if create_user(data['username'], data['email'], data['password'], data['user_type']):
-                        st.success("Done! Logging in...")
+                        st.success("Account created!")
                         st.session_state.clear()
                         st.session_state.page = 'login'
                         st.rerun()
