@@ -208,7 +208,6 @@ def main():
 
         # LOGIN
         if st.session_state.page == 'login':
-            st.markdown("### Welcome Back")
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
 
