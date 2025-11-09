@@ -1,161 +1,342 @@
+# import streamlit as st
+# import pandas as pd
+# import os
+# import PyPDF2
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.metrics.pairwise import cosine_similarity
+# from datetime import datetime
+# from Gemini_services.services import parse_resume_for_candidate
+
+# # Function to convert PDF to text
+# def pdf_to_text(file):
+#     reader = PyPDF2.PdfReader(file)
+#     text = ""
+#     for page in reader.pages:
+#         text += page.extract_text()
+#     return text
+
+# # Load the dataset
+# # df = pd.read_csv("Web_Scrapping/job_descriptions.csv")
+# # get absolute path to project root (one level above 'Main')
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "job_descriptions.csv")
+# df = pd.read_csv(CSV_PATH)
+
+# df.fillna("", inplace=True)
+
+# # Combine JobRole, Experience, and Skills to form job_description
+# # Boost experience by repeating it 3 times
+# df['job_description'] = (
+#     df['Experience'] + ' ' + df['Experience'] + ' ' + df['Experience'] + ' ' +
+#     df['Skills'] + ' ' +
+#     df['JobRole']
+# )
+
+# # Streamlit UI for Candidate
+# def candidate_interface():
+#     st.sidebar.title(f"Welcome, {st.session_state.user['username']}")
+#     menu = ["Homepage", "Job Recommendation", "More"]
+#     choice = st.sidebar.selectbox("Menu", menu)
+    
+#     if choice == "Homepage":
+#         st.title("Candidate Homepage")
+#         # st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+
+#         st.markdown("""
+#         ### Welcome to SkillFit AI — Your Personal Job-Fit Superpower
+
+#         **Stop guessing. Stop applying blindly. Start winning.**
+
+#         You don't need to send 100 applications to get 1 interview.  
+#         You just need **one perfect match** — and SkillFit AI finds it for you in seconds.
+
+
+#         #### One Upload → Your Entire Career Strategy
+
+#         **Job Recommendation System**  
+#         Upload **your resume (PDF)** → Click **“Find Jobs”** → Get this:
+
+#         - Top 5 jobs **perfectly matched** to your skills, experience & role  
+#         - Real company names, locations, salaries (when available)  
+#         - Direct **“Apply Here”** links — no copy-paste, no login traps  
+#         - Powered by **Google Gemini AI** — smarter than any job board
+
+#         No spam. No fake listings. Just **jobs you're actually qualified for**.
+
+
+#         #### Why Candidates Trust SkillFit AI
+
+#         - **No more rejection silence** — apply only where you're a **strong fit**  
+#         - **Save 20+ hours per week** — stop scrolling Indeed & LinkedIn  
+#         - **Beat ATS filters** — we show you jobs that value your real skills  
+#         - **100% private** — your resume is analyzed once, then deleted  
+#         - **Works for freshers & 15+ year veterans** — no bias, no limits
+
+
+#         #### Your Next Step is Simple
+
+#         1. Go to **“Job Recommendation”** in the sidebar  
+#         2. Upload your latest resume (PDF)  
+#         3. Click **“Find Jobs”**  
+#         4. Apply to the top matches with **one click**
+
+#         That's it.
+
+#         **No profile setup. No premium subscription. No nonsense.**
+
+#         **You focus on growing your career.**  
+#         **Let SkillFit AI open the right doors.**
+
+#         Your dream job isn't hiding — it's waiting.  
+#         Upload your resume now and let's go get it
+#         """)
+    
+#     elif choice == "Job Recommendation":
+#         st.title("Job Recommendation System")
+#         uploaded_file = st.file_uploader("Choose a resume file", type=['pdf'])
+#         resume_text = ""
+#         parsed_resume_text = ""
+
+#         if uploaded_file is not None:
+#             # Extract RAW text from the uploaded PDF
+#             resume_text = pdf_to_text(uploaded_file)
+
+#             # Parse the resume text using Gemini API
+#             try:
+#                 parsed_resume_text = parse_resume_for_candidate(resume_text)
+#                 # Optional: Show the parsed resume text
+#                 # st.subheader("Parsed Resume Text")
+#                 # st.text(parsed_resume_text)
+#             except Exception as e:
+#                 st.error(f"Error parsing resume: {str(e)}")
+#                 return
+
+#         if st.button("Find Jobs"):
+#             if parsed_resume_text.strip() != "":
+#                 # Vectorize job descriptions and parsed resume text
+#                 vectorizer = TfidfVectorizer()
+#                 job_vectors = vectorizer.fit_transform(df['job_description'])
+#                 resume_vector = vectorizer.transform([parsed_resume_text])
+
+#                 # Calculate similarity
+#                 similarity = cosine_similarity(resume_vector, job_vectors)
+#                 top_indices = similarity[0].argsort()[-5:][::-1]
+#                 top_jobs = df.iloc[top_indices][['CompanyName', 'JobRole', 'Experience', 'Skills', 'Links']]
+
+#                 # Make Links clickable
+#                 def make_clickable(link):
+#                     return f'<a href="{link}" target="_blank">Apply Here</a>'
+
+#                 top_jobs['Apply'] = top_jobs['Links'].apply(make_clickable)
+
+#                 # Remove old 'Links' column
+#                 top_jobs = top_jobs.drop(columns=['Links'])
+
+#                 # Display as HTML table
+#                 st.markdown(
+#                     top_jobs.to_html(escape=False, index=False),
+#                     unsafe_allow_html=True
+#                 )
+#             else:
+#                 st.warning("Please upload a resume file.")
+    
+#     elif choice == "More":
+#         st.title("More Options")
+#         st.write("Select an action below:")
+        
+#         col1, col2 = st.columns(2)
+#         with col1:
+#             if st.button("Logout"):
+#                 st.session_state.user = None
+#                 st.session_state.page = 'login'
+#                 st.success("Logged out successfully!")
+#                 st.rerun()
+#         with col2:
+#             if st.button("Delete Account"):
+#                 user_id = st.session_state.user['id']
+#                 delete_account(user_id)
+#                 st.session_state.user = None
+#                 st.session_state.page = 'login'
+#                 st.success("Account deleted successfully!")
+#                 st.rerun()
+
+
+
+
+
+# interfaces/Candidate.py - FINAL: BEAUTIFUL CANDIDATE UI
 import streamlit as st
 import pandas as pd
 import os
 import PyPDF2
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from datetime import datetime
 from Gemini_services.services import parse_resume_for_candidate
+from database import delete_account
 
-# Function to convert PDF to text
+# === PATH SETUP ===
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "job_descriptions.csv")
+df = pd.read_csv(CSV_PATH)
+df.fillna("", inplace=True)
+
+# Boost experience + combine features
+df['job_description'] = (
+    df['Experience'] + ' ' + df['Experience'] + ' ' + df['Experience'] + ' ' +
+    df['Skills'] + ' ' + df['JobRole']
+)
+
+# === PDF TO TEXT ===
 def pdf_to_text(file):
     reader = PyPDF2.PdfReader(file)
     text = ""
     for page in reader.pages:
-        text += page.extract_text()
+        text += page.extract_text() or ""
     return text
 
-# Load the dataset
-# df = pd.read_csv("Web_Scrapping/job_descriptions.csv")
-# get absolute path to project root (one level above 'Main')
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "job_descriptions.csv")
-df = pd.read_csv(CSV_PATH)
-
-df.fillna("", inplace=True)
-
-# Combine JobRole, Experience, and Skills to form job_description
-# Boost experience by repeating it 3 times
-df['job_description'] = (
-    df['Experience'] + ' ' + df['Experience'] + ' ' + df['Experience'] + ' ' +
-    df['Skills'] + ' ' +
-    df['JobRole']
-)
-
-# Streamlit UI for Candidate
+# === CANDIDATE INTERFACE — BEAUTIFUL & POWERFUL ===
 def candidate_interface():
-    st.sidebar.title(f"Welcome, {st.session_state.user['username']}")
-    menu = ["Homepage", "Job Recommendation", "More"]
-    choice = st.sidebar.selectbox("Menu", menu)
+    # === SIDEBAR: SKILLFIT AI + USERNAME IN BLUE ===
+    st.sidebar.markdown("""
+    <h1 style='color: #1e40af; font-size: 28px; font-weight: 900; margin-bottom: 5px;'>
+        SkillFit AI
+    </h1>
+    """, unsafe_allow_html=True)
     
+    st.sidebar.markdown(f"""
+    <p style='color: #1e40af; font-size: 20px; font-weight: bold; margin-top: 0;'>
+        Hi, {st.session_state.user['username']}!
+    </p>
+    """, unsafe_allow_html=True)
+    
+    st.sidebar.markdown("---")
+    menu = ["Homepage", "Job Recommendation", "More"]
+    choice = st.sidebar.selectbox("Menu", menu, label_visibility="collapsed")
+
+    # === HOMEPAGE — REDESIGNED TO INSPIRE ===
     if choice == "Homepage":
-        st.title("Candidate Homepage")
-        # st.subheader(f"Welcome to SkillFit AI, {st.session_state.user['username']}!")
+        st.markdown("""
+        <h1 style='text-align: center; color: #1e40af; font-size: 48px; font-weight: 900;'>
+            SkillFit AI
+        </h1>
+        <p style='text-align: center; color: #555; font-size: 22px; margin-bottom: 40px;'>
+            <strong>Your Resume.</strong> Your Superpower. Your Next Job.
+        </p>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 35px; border-radius: 18px; text-align: center; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
+            <h2 style="color: #1e3a8a; margin: 0;">
+                Welcome back, <strong style="color: #1e40af; font-size: 28px;">{st.session_state.user['username']}</strong>!
+            </h2>
+            <p style="font-size: 20px; color: #1e40af; margin: 10px 0;">
+                You're <strong>one upload away</strong> from your dream job.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
+
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.markdown("""
+            <div style="background: #f0fdf4; padding: 30px; border-radius: 16px; border-left: 8px solid #22c55e; height: 100%;">
+                <h3 style="color: #166534; margin-top: 0;">How It Works</h3>
+                <p style="font-size: 17px; line-height: 1.7;">
+                    1. Upload your <strong>latest resume (PDF)</strong><br>
+                    2. Click <strong>“Find Jobs”</strong><br>
+                    3. Get <strong>top 5 perfect matches</strong> with <strong>direct apply links</strong>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("""
+            <div style="background: #fefce8; padding: 30px; border-radius: 16px; border-left: 8px solid #facc15; height: 100%;">
+                <h3 style="color: #854d0e; margin-top: 0;">Why You'll Win</h3>
+                <p style="font-size: 17px; line-height: 1.7;">
+                    • Apply only where you're <strong>90%+ qualified</strong><br>
+                    • Beat ATS filters with <strong>Gemini AI</strong><br>
+                    • No fake jobs — real companies, real links<br>
+                    • <strong>Zero spam. Zero stress.</strong>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
 
         st.markdown("""
-        ### Welcome to SkillFit AI — Your Personal Job-Fit Superpower
+        <div style="background: #ecfdf5; padding: 30px; border-radius: 16px; border: 3px dashed #10b981; text-align: center;">
+            <h3 style="color: #065f46; margin-top: 0;">Your Resume Is Ready. Are You?</h3>
+            <p style="font-size: 19px; color: #065f46;">
+                <strong>Stop applying blindly.</strong><br>
+                Let AI show you <strong>jobs that want YOU</strong>.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        **Stop guessing. Stop applying blindly. Start winning.**
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("""
+        <p style="text-align: center; font-size: 22px; color: #1e40af;">
+            <strong>Ready to land your next role?</strong><br>
+            Go to <strong>Job Recommendation</strong> → Upload → <strong>Win.</strong>
+        </p>
+        """, unsafe_allow_html=True)
 
-        You don't need to send 100 applications to get 1 interview.  
-        You just need **one perfect match** — and SkillFit AI finds it for you in seconds.
-
-
-        #### One Upload → Your Entire Career Strategy
-
-        **Job Recommendation System**  
-        Upload **your resume (PDF)** → Click **“Find Jobs”** → Get this:
-
-        - Top 5 jobs **perfectly matched** to your skills, experience & role  
-        - Real company names, locations, salaries (when available)  
-        - Direct **“Apply Here”** links — no copy-paste, no login traps  
-        - Powered by **Google Gemini AI** — smarter than any job board
-
-        No spam. No fake listings. Just **jobs you're actually qualified for**.
-
-
-        #### Why Candidates Trust SkillFit AI
-
-        - **No more rejection silence** — apply only where you're a **strong fit**  
-        - **Save 20+ hours per week** — stop scrolling Indeed & LinkedIn  
-        - **Beat ATS filters** — we show you jobs that value your real skills  
-        - **100% private** — your resume is analyzed once, then deleted  
-        - **Works for freshers & 15+ year veterans** — no bias, no limits
-
-
-        #### Your Next Step is Simple
-
-        1. Go to **“Job Recommendation”** in the sidebar  
-        2. Upload your latest resume (PDF)  
-        3. Click **“Find Jobs”**  
-        4. Apply to the top matches with **one click**
-
-        That's it.
-
-        **No profile setup. No premium subscription. No nonsense.**
-
-        **You focus on growing your career.**  
-        **Let SkillFit AI open the right doors.**
-
-        Your dream job isn't hiding — it's waiting.  
-        Upload your resume now and let's go get it
-        """)
-    
+    # === JOB RECOMMENDATION — PREMIUM LOOK ===
     elif choice == "Job Recommendation":
-        st.title("Job Recommendation System")
-        uploaded_file = st.file_uploader("Choose a resume file", type=['pdf'])
-        resume_text = ""
-        parsed_resume_text = ""
+        st.markdown("<h1 style='color: #1e40af; text-align: center;'>Job Recommendation</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-size: 18px; color: #555;'>Upload your resume → Get your <strong>top 5 perfect jobs</strong> instantly.</p>", unsafe_allow_html=True)
+
+        uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=['pdf'], help="We only read it once — never stored")
 
         if uploaded_file is not None:
-            # Extract RAW text from the uploaded PDF
-            resume_text = pdf_to_text(uploaded_file)
+            with st.spinner("AI is reading your resume..."):
+                resume_text = pdf_to_text(uploaded_file)
+                try:
+                    parsed_resume = parse_resume_for_candidate(resume_text)
+                    st.success("Resume analyzed successfully!")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+                    parsed_resume = ""
 
-            # Parse the resume text using Gemini API
-            try:
-                parsed_resume_text = parse_resume_for_candidate(resume_text)
-                # Optional: Show the parsed resume text
-                # st.subheader("Parsed Resume Text")
-                # st.text(parsed_resume_text)
-            except Exception as e:
-                st.error(f"Error parsing resume: {str(e)}")
-                return
+            if st.button("Find My Perfect Jobs", use_container_width=True, type="primary"):
+                if parsed_resume.strip():
+                    with st.spinner("Finding jobs that match YOU..."):
+                        vectorizer = TfidfVectorizer()
+                        job_vectors = vectorizer.fit_transform(df['job_description'])
+                        resume_vector = vectorizer.transform([parsed_resume])
+                        similarity = cosine_similarity(resume_vector, job_vectors)
+                        top_indices = similarity[0].argsort()[-5:][::-1]
+                        top_jobs = df.iloc[top_indices][['CompanyName', 'JobRole', 'Experience', 'Skills', 'Links']].copy()
 
-        if st.button("Find Jobs"):
-            if parsed_resume_text.strip() != "":
-                # Vectorize job descriptions and parsed resume text
-                vectorizer = TfidfVectorizer()
-                job_vectors = vectorizer.fit_transform(df['job_description'])
-                resume_vector = vectorizer.transform([parsed_resume_text])
+                        def make_apply_button(link):
+                            return f'<a href="{link}" target="_blank"><button style="background:#1e40af; color:white; padding:10px 20px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Apply Now</button></a>'
 
-                # Calculate similarity
-                similarity = cosine_similarity(resume_vector, job_vectors)
-                top_indices = similarity[0].argsort()[-5:][::-1]
-                top_jobs = df.iloc[top_indices][['CompanyName', 'JobRole', 'Experience', 'Skills', 'Links']]
+                        top_jobs['Apply'] = top_jobs['Links'].apply(make_apply_button)
+                        top_jobs = top_jobs.drop(columns=['Links'])
+                        top_jobs.index = [f"#{i+1}" for i in range(len(top_jobs))]
 
-                # Make Links clickable
-                def make_clickable(link):
-                    return f'<a href="{link}" target="_blank">Apply Here</a>'
+                        st.markdown("### Your Top 5 Perfect Jobs")
+                        st.markdown(top_jobs.to_html(escape=False, index=True), unsafe_allow_html=True)
+                        st.balloons()
+                else:
+                    st.warning("Please upload a valid resume.")
 
-                top_jobs['Apply'] = top_jobs['Links'].apply(make_clickable)
-
-                # Remove old 'Links' column
-                top_jobs = top_jobs.drop(columns=['Links'])
-
-                # Display as HTML table
-                st.markdown(
-                    top_jobs.to_html(escape=False, index=False),
-                    unsafe_allow_html=True
-                )
-            else:
-                st.warning("Please upload a resume file.")
-    
+    # === MORE OPTIONS ===
     elif choice == "More":
-        st.title("More Options")
-        st.write("Select an action below:")
-        
+        st.markdown("<h1 style='color: #1e40af; text-align: center;'>More Options</h1>", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Logout"):
+            if st.button("Logout", use_container_width=True):
                 st.session_state.user = None
                 st.session_state.page = 'login'
                 st.success("Logged out successfully!")
                 st.rerun()
         with col2:
-            if st.button("Delete Account"):
-                user_id = st.session_state.user['id']
-                delete_account(user_id)
+            if st.button("Delete Account", use_container_width=True, type="secondary"):
+                delete_account(st.session_state.user['id'])
                 st.session_state.user = None
                 st.session_state.page = 'login'
-                st.success("Account deleted successfully!")
+                st.success("Account deleted.")
                 st.rerun()

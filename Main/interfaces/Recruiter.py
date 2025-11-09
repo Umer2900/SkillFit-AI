@@ -470,7 +470,7 @@ def recruiter_interface():
         st.markdown("""
         <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);">
             <h2 style="color: #1e40af; margin-top: 0;">
-                Welcome back, <span style="color: #1e3a8a; font-weight: 900;">{username}</span>!
+                Welcome, <span style="color: #1e3a8a; font-weight: 900;">{username}</span>!
             </h2>
             <p style="font-size: 18px; color: #1e40af;">
                 You're one click away from hiring <strong>10x faster</strong>.
