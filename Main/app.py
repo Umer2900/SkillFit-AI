@@ -145,25 +145,26 @@ def send_verification_email(email, code):
 
 
 def main():
+    # === ONLY IF NOT LOGGED IN ===
     if st.session_state.user is None:
-        
-        # === SIMPLE & BEAUTIFUL TITLE ===
-        st.markdown("<h1 style='text-align: center; color: #1e40af; font-size: 50px; font-weight: 800;'>SkillFit AI</h1>", 
-                    unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #4b5563; font-size: 18px;'>AI-Powered Hiring & Job Matching</p>", 
-                    unsafe_allow_html=True)
-        st.markdown("---")
 
+        # === BIG BLUE TITLE (GUARANTEED VISIBLE) ===
+        st.markdown("<h1 style='text-align: center; color: #1e40af; font-size: 52px; font-weight: 900; margin-bottom: 0px;'>SkillFit AI</h1>", 
+                    unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #555; font-size: 20px; margin-bottom: 30px;'>AI-Powered Hiring & Job Matching</p>", 
+                    unsafe_allow_html=True)
+
+        # === LOGIN PAGE ===
         if st.session_state.page == 'login':
-            st.subheader("Welcome Back!")
+            st.markdown("### Welcome Back!")
+            
+            email = st.text_input("Email", placeholder="umer@example.com")
+            password = st.text_input("Password", type="password", placeholder="••••••••")
 
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
-
-            # === FULL-WIDTH BLUE LOGIN BUTTON ===
-            if st.button("Login", key="login", use_container_width=True, type="primary"):
+            # FULL BLUE LOGIN BUTTON
+            if st.button("**Login**", use_container_width=True, type="primary"):
                 if not email or not password:
-                    st.error("Please fill in all fields")
+                    st.error("Please fill both fields")
                 else:
                     user = check_credentials(email, password)
                     if user:
@@ -173,40 +174,41 @@ def main():
                             'username': user['username'],
                             'user_type': user['user_type']
                         }
-                        st.success("Logged in successfully!")
+                        st.success("Logged in!")
                         st.rerun()
                     else:
-                        st.error("Invalid credentials")
+                        st.error("Wrong email or password")
 
-            # === SIMPLE BLUE LINK FOR SIGNUP ===
-            st.markdown("<p style='text-align: center; margin-top: 20px;'>"
+            # BLUE SIGNUP LINK
+            st.markdown("<p style='text-align: center; margin-top: 25px; font-size: 16px;'>"
                         "Don't have an account? "
-                        "<a href='#' style='color: #3b82f6; font-weight: bold; text-decoration: none;'>Sign up</a>"
+                        "<a href='#' style='color: #2563eb; font-weight: bold; text-decoration: none;'>Sign up here</a>"
                         "</p>", unsafe_allow_html=True)
 
-            # Hidden button to catch the link click
-            if st.button("Go to Signup", key="hidden_signup", help="Triggered by link click"):
+            # Hidden trigger for the link
+            if st.button("Switch to Signup", key="go_signup", help="Click link above"):
                 st.session_state.page = 'signup'
                 st.rerun()
 
-        # === SIGNUP PAGE - SAME STYLE ===
-        elif st.session_state.page == 'signup':
-            st.subheader("Create Your Account")
 
-            username = st.text_input("User Name")
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
+        # === SIGNUP PAGE ===
+        elif st.session_state.page == 'signup':
+            st.markdown("### Create Your Account")
+
+            username = st.text_input("Username", placeholder="umer2900")
+            email = st.text_input("Email", placeholder="umer@example.com")
+            password = st.text_input("Password", type="password", placeholder="min 6 characters")
             user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
 
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("Send Verification Code", use_container_width=True):
-                    if not username or not email or not password:
-                        st.error("Please fill in all fields")
+                if st.button("Send Code", use_container_width=True, type="primary"):
+                    if not all([username, email, password]):
+                        st.error("All fields required")
                     elif not is_valid_email(email):
-                        st.error("Invalid email address")
+                        st.error("Invalid email")
                     elif len(password) < 6:
-                        st.error("Password must be 6+ characters")
+                        st.error("Password too short")
                     else:
                         st.session_state.signup_data = {
                             'username': username, 'email': email,
@@ -217,38 +219,36 @@ def main():
                         if send_verification_email(email, code):
                             st.session_state.page = 'verify'
                             st.rerun()
-                        else:
-                            st.error("Failed to send code")
 
             with col2:
                 if st.button("Back to Login", use_container_width=True):
                     st.session_state.page = 'login'
                     st.rerun()
 
-            # === BACK TO LOGIN LINK ===
-            st.markdown("<p style='text-align: center; margin-top: 20px;'>"
+            st.markdown("<p style='text-align: center; margin-top: 25px;'>"
                         "Already have an account? "
-                        "<a href='#' style='color: #3b82f6; font-weight: bold; text-decoration: none;'>Log in</a>"
+                        "<a href='#' style='color: #2563eb; font-weight: bold;'>Log in</a>"
                         "</p>", unsafe_allow_html=True)
 
-            if st.button("Go to Login", key="hidden_login"):
+            if st.button("Switch to Login", key="go_login"):
                 st.session_state.page = 'login'
                 st.rerun()
 
-        # === VERIFY PAGE - SAME CLEAN LOOK ===
-        elif st.session_state.page == 'verify':
-            st.subheader("Check Your Email")
 
-            code_input = st.text_input("Enter 6-digit code")
+        # === VERIFY PAGE ===
+        elif st.session_state.page == 'verify':
+            st.markdown("### Check Your Email")
+            st.info("We sent a 6-digit code to your email")
+
+            code = st.text_input("Enter code", placeholder="123456")
 
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Verify", use_container_width=True, type="primary"):
-                    if code_input == st.session_state.verification_code:
-                        signup_data = st.session_state.signup_data
-                        if create_user(signup_data['username'], signup_data['email'],
-                                     signup_data['password'], signup_data['user_type']):
-                            st.success("Account created! Please login.")
+                    if code == st.session_state.verification_code:
+                        data = st.session_state.signup_data
+                        if create_user(data['username'], data['email'], data['password'], data['user_type']):
+                            st.success("Account created! Logging you in...")
                             st.session_state.clear()
                             st.session_state.page = 'login'
                             st.rerun()
@@ -258,13 +258,16 @@ def main():
                         st.error("Wrong code")
 
             with col2:
-                if st.button("Back to Signup", use_container_width=True):
+                if st.button("Back", use_container_width=True):
                     st.session_state.page = 'signup'
                     st.rerun()
 
+    # === LOGGED IN ===
     else:
-        # Logged in
         if st.session_state.user['user_type'] == "Recruiter":
             recruiter_interface()
         else:
             candidate_interface()
+
+if __name__ == "__main__":
+    main()
