@@ -145,7 +145,7 @@
 
 
 
-# app.py - FINAL: LINKS WORK IN SAME TAB (NO NEW TAB, NO ~/+/)
+# app.py - FINAL: REAL LINKS THAT WORK IN SAME TAB (NO NEW TAB, NO BUTTONS)
 import streamlit as st
 from auth import check_credentials, create_user
 from database import init_db
@@ -177,7 +177,7 @@ def generate_verification_code():
 
 def send_verification_email(email, code):
     try:
-        msg = MIMEText(f"Your SkillFit AI verification code is: {code}")
+        msg = MIMEText(f"Your SkillFit AI verification code:\n\n{code}")
         msg['Subject'] = 'SkillFit AI - Verify Email'
         msg['From'] = st.secrets["GMAIL_USER"]
         msg['To'] = email
@@ -191,23 +191,27 @@ def send_verification_email(email, code):
 
 # === MAIN ===
 def main():
-    # === FIX URL PARAMS AT TOP ===
-    params = st.experimental_get_query_params()
-    if "page" in params:
-        if params["page"][0] == "signup":
-            st.session_state.page = "signup"
-        elif params["page"][0] == "login":
-            st.session_state.page = "login"
-        st.experimental_set_query_params()  # CLEAR URL
+    # === READ URL PARAMS AT THE VERY TOP ===
+    params = st.query_params
+    if params.get("page") == "signup":
+        st.session_state.page = "signup"
+        st.query_params.clear()
+        st.rerun()
+    elif params.get("page") == "login":
+        st.session_state.page = "login"
+        st.query_params.clear()
         st.rerun()
 
+    # === ONLY SHOW UI IF NOT LOGGED IN ===
     if st.session_state.user is None:
         # TITLE
         st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center; color:#555; font-size:20px; margin-bottom:40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
 
-        # LOGIN
+        # LOGIN PAGE
         if st.session_state.page == 'login':
+            st.markdown("### Welcome Back")
+
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
 
@@ -217,33 +221,42 @@ def main():
                 else:
                     user = check_credentials(email, password)
                     if user:
-                        st.session_state.user = user
+                        st.session_state.user = {
+                            'id': user['id'], 'email': user['email'],
+                            'username': user['username'], 'user_type': user['user_type']
+                        }
                         st.success("Logged in!")
                         st.rerun()
                     else:
                         st.error("Wrong credentials")
 
-            # LINK — SAME TAB
+            # REAL LINK — SAME TAB ONLY
             st.markdown("""
             <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Don't have an account? 
-                <a href="?page=signup" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                    Sign up here
+                <a href="/?page=signup" 
+                   style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                   Sign up here
                 </a>
             </div>
             """, unsafe_allow_html=True)
 
-        # SIGNUP
+        # SIGNUP PAGE
         elif st.session_state.page == 'signup':
             st.markdown("### Create Your Account")
+
             username = st.text_input("Username")
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
             user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
 
             if st.button("Send Verification Code", use_container_width=True, type="primary"):
-                if not all([username, email, password]) or len(password) < 6 or not is_valid_email(email):
-                    st.error("Check all fields")
+                if not all([username, email, password]):
+                    st.error("All fields required")
+                elif not is_valid_email(email):
+                    st.error("Invalid email")
+                elif len(password) < 6:
+                    st.error("Password too short")
                 else:
                     st.session_state.signup_data = {"username": username, "email": email, "password": password, "user_type": user_type}
                     code = generate_verification_code()
@@ -253,21 +266,23 @@ def main():
                         st.session_state.page = 'verify'
                         st.rerun()
 
-            # LINK — SAME TAB
+            # REAL LOGIN LINK — SAME TAB
             st.markdown("""
             <div style="text-align:center; margin-top:30px; font-size:16px;">
                 Already have an account? 
-                <a href="?page=login" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                    Log in
+                <a href="/?page=login" 
+                   style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                   Log in
                 </a>
             </div>
             """, unsafe_allow_html=True)
 
-        # VERIFY
+        # VERIFY PAGE
         elif st.session_state.page == 'verify':
             st.markdown("### Verify Email")
-            st.info("Check your email")
-            code = st.text_input("6-digit code")
+            st.info("Check your email for the 6-digit code")
+
+            code = st.text_input("Enter code")
             if st.button("Verify", use_container_width=True, type="primary"):
                 if code == st.session_state.verification_code:
                     data = st.session_state.signup_data
