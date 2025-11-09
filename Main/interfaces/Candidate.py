@@ -287,7 +287,7 @@ def candidate_interface():
     elif choice == "Job Recommendation":
         st.markdown("<h1 style='color: #1e40af; text-align: center;'>Job Recommendation</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; font-size: 18px; color: #555;'>Upload your resume → Get your <strong>top 5 perfect jobs</strong> instantly.</p>", unsafe_allow_html=True)
-
+        st.markdown("<br><br>")
         uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=['pdf'], help="We only read it once — never stored")
 
         if uploaded_file is not None:
