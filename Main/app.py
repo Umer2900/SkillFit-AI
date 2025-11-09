@@ -1,47 +1,47 @@
-import streamlit as st
-from auth import check_credentials, create_user
-from database import init_db
-from interfaces.Recruiter import recruiter_interface
-from interfaces.Candidate import candidate_interface
-import re
-import random
-import string
-import smtplib
-from email.mime.text import MIMEText
+# import streamlit as st
+# from auth import check_credentials, create_user
+# from database import init_db
+# from interfaces.Recruiter import recruiter_interface
+# from interfaces.Candidate import candidate_interface
+# import re
+# import random
+# import string
+# import smtplib
+# from email.mime.text import MIMEText
 
-# Initialize database
-init_db()
+# # Initialize database
+# init_db()
 
-# Session state initialization
-if 'user' not in st.session_state:
-    st.session_state.user = None
-if 'page' not in st.session_state:
-    st.session_state.page = 'login'
-if 'signup_data' not in st.session_state:
-    st.session_state.signup_data = None
-if 'verification_code' not in st.session_state:
-    st.session_state.verification_code = None
+# # Session state initialization
+# if 'user' not in st.session_state:
+#     st.session_state.user = None
+# if 'page' not in st.session_state:
+#     st.session_state.page = 'login'
+# if 'signup_data' not in st.session_state:
+#     st.session_state.signup_data = None
+# if 'verification_code' not in st.session_state:
+#     st.session_state.verification_code = None
 
-def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
+# def is_valid_email(email):
+#     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+#     return re.match(pattern, email) is not None
 
-def generate_verification_code(length=6):
-    return ''.join(random.choices(string.digits, k=length))
+# def generate_verification_code(length=6):
+#     return ''.join(random.choices(string.digits, k=length))
 
-def send_verification_email(email, code):
-    try:
-        msg = MIMEText(f"Your verification code is: {code}")
-        msg['Subject'] = 'Verify Your Email'
-        msg['From'] = st.secrets["GMAIL_USER"]
-        msg['To'] = email
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
-            server.send_message(msg)
-        return True
-    except Exception as e:
-        st.error(f"Failed to send verification email: {str(e)}")
-        return False
+# def send_verification_email(email, code):
+#     try:
+#         msg = MIMEText(f"Your verification code is: {code}")
+#         msg['Subject'] = 'Verify Your Email'
+#         msg['From'] = st.secrets["GMAIL_USER"]
+#         msg['To'] = email
+#         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+#             server.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
+#             server.send_message(msg)
+#         return True
+#     except Exception as e:
+#         st.error(f"Failed to send verification email: {str(e)}")
+#         return False
 
 # def main():
 #     if st.session_state.user is None:
