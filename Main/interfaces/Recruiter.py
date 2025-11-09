@@ -109,7 +109,7 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
 # ----------------------------------------------------------------------
 def recruiter_interface():
     st.sidebar.title(f"Welcome, {st.session_state.user['username']}")
-    menu = ["Homepage", "Profile Check", "Bulk Resume Screening", "More"]
+    menu = ["Homepage", "Bulk Resume Screening","Profile Check", "More"]
     choice = st.sidebar.selectbox("Menu", menu)
 
     # HOMEPAGE
