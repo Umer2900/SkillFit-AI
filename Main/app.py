@@ -145,7 +145,7 @@
 
 
 
-# app.py - FINAL: USING st.link_button() → PERFECT LINKS IN SAME TAB
+# app.py - FINAL: BLUE TEXT LINKS THAT WORK IN SAME TAB (NO NEW TAB, NO BUTTON LOOK)
 import streamlit as st
 from auth import check_credentials, create_user
 from database import init_db
@@ -189,24 +189,40 @@ def send_verification_email(email, code):
         st.error("Email failed")
         return False
 
-# === DETECT PAGE FROM URL ===
-params = st.experimental_get_query_params()
-if "page" in params:
-    if params["page"][0] == "signup":
-        st.session_state.page = "signup"
-    elif params["page"][0] == "login":
-        st.session_state.page = "login"
-    st.experimental_set_query_params()  # Clean URL
-    st.rerun()
+# BEAUTIFUL BLUE TEXT LINK FUNCTION
+def text_link(label, target_page):
+    st.markdown(f"""
+    <div style="text-align:center; margin-top:10px;">
+        <a href="#" style="
+            color: #2563eb; 
+            font-weight: bold; 
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-block;
+            transition: all 0.2s;
+        "
+        onmouseover="this.style.background='#dbeafe'"
+        onmouseout="this.style.background='transparent'"
+        onclick="event.preventDefault(); document.getElementById('{label}').click()">
+            {label}
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button(label, key=f"link_{target_page}", help="Navigate", type="secondary"):
+        st.session_state.page = target_page
+        st.rerun()
 
-# === MAIN UI ===
+# MAIN APP
 def main():
     if st.session_state.user is None:
         # TITLE
         st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center; color:#555; font-size:20px; margin-bottom:40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
 
-        # === LOGIN PAGE ===
+        # LOGIN PAGE
         if st.session_state.page == 'login':
             st.markdown("### Welcome Back")
             email = st.text_input("Email")
@@ -224,11 +240,10 @@ def main():
                     else:
                         st.error("Wrong credentials")
 
-            # PERFECT LINK — SAME TAB, CLEAN URL
             st.markdown("<p style='text-align:center; margin-top:30px; font-size:16px;'>Don't have an account?</p>", unsafe_allow_html=True)
-            st.link_button("Sign up here", "?page=signup", use_container_width=True)
+            text_link("Sign up here", "signup")
 
-        # === SIGNUP PAGE ===
+        # SIGNUP PAGE
         elif st.session_state.page == 'signup':
             st.markdown("### Create Your Account")
             username = st.text_input("Username")
@@ -249,9 +264,9 @@ def main():
                         st.rerun()
 
             st.markdown("<p style='text-align:center; margin-top:30px; font-size:16px;'>Already have an account?</p>", unsafe_allow_html=True)
-            st.link_button("Log in", "?page=login", use_container_width=True)
+            text_link("Log in", "login")
 
-        # === VERIFY PAGE ===
+        # VERIFY PAGE
         elif st.session_state.page == 'verify':
             st.markdown("### Verify Your Email")
             st.info("Check your email for the 6-digit code")
