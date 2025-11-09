@@ -227,7 +227,7 @@ def candidate_interface():
         st.markdown(f"""
         <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 35px; border-radius: 18px; text-align: center; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);">
             <h2 style="color: #1e3a8a; margin: 0;">
-                Welcome back, <strong style="color: #1e40af; font-size: 28px;">{st.session_state.user['username']}</strong>!
+                Welcome, <strong style="color: #1e40af; font-size: 28px;">{st.session_state.user['username']}</strong>!
             </h2>
             <p style="font-size: 20px; color: #1e40af; margin: 10px 0;">
                 You're <strong>one upload away</strong> from your dream job.
