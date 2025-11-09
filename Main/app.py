@@ -145,136 +145,148 @@
 
 
 
-# app.py - FINAL: LINKS WORK IN SAME TAB (GUARANTEED)
+# app.py - FINAL: LINKS WORK IN SAME TAB (NO NEW TAB, NO ~/+/)
 import streamlit as st
-
-# === YOUR IMPORTS ===
 from auth import check_credentials, create_user
 from database import init_db
 from interfaces.Recruiter import recruiter_interface
 from interfaces.Candidate import candidate_interface
-import re, random, string, smtplib
+import re
+import random
+import string
+import smtplib
 from email.mime.text import MIMEText
 
 init_db()
 
 # Session state
-for key in ['user', 'page', 'signup_data', 'verification_code']:
-    if key not in st.session_state:
-        st.session_state[key] = None
-st.session_state.page = st.session_state.page or 'login'
+if 'user' not in st.session_state:
+    st.session_state.user = None
+if 'page' not in st.session_state:
+    st.session_state.page = 'login'
+if 'signup_data' not in st.session_state:
+    st.session_state.signup_data = None
+if 'verification_code' not in st.session_state:
+    st.session_state.verification_code = None
 
-# Helpers
-def is_valid_email(e): return re.match(r'^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$', e)
-def gen_code(): return ''.join(random.choices(string.digits, k=6))
+def is_valid_email(email):
+    return re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email)
 
-def send_email(email, code):
+def generate_verification_code():
+    return ''.join(random.choices(string.digits, k=6))
+
+def send_verification_email(email, code):
     try:
-        msg = MIMEText(f"Your SkillFit AI code: {code}")
+        msg = MIMEText(f"Your SkillFit AI verification code is: {code}")
         msg['Subject'] = 'SkillFit AI - Verify Email'
         msg['From'] = st.secrets["GMAIL_USER"]
         msg['To'] = email
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as s:
-            s.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
-            s.send_message(msg)
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_APP_PASSWORD"])
+            server.send_message(msg)
         return True
     except:
         st.error("Email failed")
         return False
 
-# === MAGIC: READ URL & SWITCH PAGE IN SAME TAB ===
-params = st.query_params.to_dict()
-if params.get("view") == "signup":
-    st.session_state.page = "signup"
-    st.query_params.clear()
-    st.rerun()
-elif params.get("view") == "login":
-    st.session_state.page = "login"
-    st.query_params.clear()
-    st.rerun()
-
-# === MAIN UI ===
+# === MAIN ===
 def main():
-    if st.session_state.user:
-        globals()[f"{st.session_state.user['user_type'].lower()}_interface"]()
-        return
+    # === FIX URL PARAMS AT TOP ===
+    params = st.experimental_get_query_params()
+    if "page" in params:
+        if params["page"][0] == "signup":
+            st.session_state.page = "signup"
+        elif params["page"][0] == "login":
+            st.session_state.page = "login"
+        st.experimental_set_query_params()  # CLEAR URL
+        st.rerun()
 
-    # TITLE
-    st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#555; font-size:20px; margin-bottom:40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
+    if st.session_state.user is None:
+        # TITLE
+        st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#555; font-size:20px; margin-bottom:40px;'>AI-Powered Hiring & Job Matching</p>", unsafe_allow_html=True)
 
-    # LOGIN
-    if st.session_state.page == 'login':
-        st.markdown("### Welcome Back")
-        email = st.text_input("Email")
-        pwd = st.text_input("Password", type="password")
+        # LOGIN
+        if st.session_state.page == 'login':
+            st.markdown("### Welcome Back")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
 
-        if st.button("Login", use_container_width=True, type="primary"):
-            if not email or not pwd:
-                st.error("Fill both fields")
-            elif user := check_credentials(email, pwd):
-                st.session_state.user = user
-                st.success("Logged in!")
-                st.rerun()
-            else:
-                st.error("Wrong credentials")
-
-        # THIS LINK WORKS IN SAME TAB
-        st.markdown("""
-        <div style="text-align:center; margin-top:30px; font-size:16px;">
-            Don't have an account? 
-            <a href="/?view=signup" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                Sign up here
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # SIGNUP
-    elif st.session_state.page == 'signup':
-        st.markdown("### Create Your Account")
-        username = st.text_input("Username")
-        email = st.text_input("Email")
-        pwd = st.text_input("Password", type="password")
-        user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
-
-        if st.button("Send Verification Code", use_container_width=True, type="primary"):
-            if not all([username, email, pwd]) or len(pwd) < 6 or not is_valid_email(email):
-                st.error("Check all fields")
-            else:
-                st.session_state.signup_data = {"username": username, "email": email, "password": pwd, "user_type": user_type}
-                code = gen_code()
-                st.session_state.verification_code = code
-                if send_email(email, code):
-                    st.success("Code sent!")
-                    st.session_state.page = 'verify'
-                    st.rerun()
-
-        st.markdown("""
-        <div style="text-align:center; margin-top:30px; font-size:16px;">
-            Already have an account? 
-            <a href="/?view=login" style="color:#2563eb; font-weight:bold; text-decoration:none;">
-                Log in
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # VERIFY
-    elif st.session_state.page == 'verify':
-        st.markdown("### Verify Email")
-        st.info("Check your email")
-        code = st.text_input("6-digit code")
-        if st.button("Verify", use_container_width=True, type="primary"):
-            if code == st.session_state.verification_code:
-                data = st.session_state.signup_data
-                if create_user(data['username'], data['email'], data['password'], data['user_type']):
-                    st.success("Done!")
-                    st.session_state.clear()
-                    st.session_state.page = 'login'
-                    st.rerun()
+            if st.button("Login", use_container_width=True, type="primary"):
+                if not email or not password:
+                    st.error("Fill both fields")
                 else:
-                    st.error("Email taken")
-            else:
-                st.error("Wrong code")
+                    user = check_credentials(email, password)
+                    if user:
+                        st.session_state.user = user
+                        st.success("Logged in!")
+                        st.rerun()
+                    else:
+                        st.error("Wrong credentials")
+
+            # LINK — SAME TAB
+            st.markdown("""
+            <div style="text-align:center; margin-top:30px; font-size:16px;">
+                Don't have an account? 
+                <a href="?page=signup" style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                    Sign up here
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # SIGNUP
+        elif st.session_state.page == 'signup':
+            st.markdown("### Create Your Account")
+            username = st.text_input("Username")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            user_type = st.selectbox("I am a", ["Recruiter", "Candidate"])
+
+            if st.button("Send Verification Code", use_container_width=True, type="primary"):
+                if not all([username, email, password]) or len(password) < 6 or not is_valid_email(email):
+                    st.error("Check all fields")
+                else:
+                    st.session_state.signup_data = {"username": username, "email": email, "password": password, "user_type": user_type}
+                    code = generate_verification_code()
+                    st.session_state.verification_code = code
+                    if send_verification_email(email, code):
+                        st.success("Code sent!")
+                        st.session_state.page = 'verify'
+                        st.rerun()
+
+            # LINK — SAME TAB
+            st.markdown("""
+            <div style="text-align:center; margin-top:30px; font-size:16px;">
+                Already have an account? 
+                <a href="?page=login" style="color:#2563eb; font-weight:bold; text-decoration:none;">
+                    Log in
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # VERIFY
+        elif st.session_state.page == 'verify':
+            st.markdown("### Verify Email")
+            st.info("Check your email")
+            code = st.text_input("6-digit code")
+            if st.button("Verify", use_container_width=True, type="primary"):
+                if code == st.session_state.verification_code:
+                    data = st.session_state.signup_data
+                    if create_user(data['username'], data['email'], data['password'], data['user_type']):
+                        st.success("Account created!")
+                        st.session_state.clear()
+                        st.session_state.page = 'login'
+                        st.rerun()
+                    else:
+                        st.error("Email already used")
+                else:
+                    st.error("Wrong code")
+
+    else:
+        if st.session_state.user['user_type'] == "Recruiter":
+            recruiter_interface()
+        else:
+            candidate_interface()
 
 if __name__ == "__main__":
     main()
