@@ -106,7 +106,7 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
 # ----------------------------------------------------------------------
 # RECRUITER INTERFACE — BEAUTIFUL & PROFESSIONAL
 # ----------------------------------------------------------------------
-def recruiter_interface():
+def recruiter_interface(): 
     # === SIDEBAR: SKILLFIT AI + USERNAME IN BLUE ===
     st.sidebar.markdown("""
     <h1 style='color: #1e40af; font-size: 28px; font-weight: 900; margin-bottom: 5px;'>
