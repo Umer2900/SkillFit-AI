@@ -31,7 +31,7 @@ def txt_to_text(txt_file) -> str:
 # ----------------------------------------------------------------------
 # BULK SCREENING (UNCHANGED)
 # ----------------------------------------------------------------------
-def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
+async def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
     start_time = time.time()
     summary = []
     filtered_files = {}
@@ -64,13 +64,13 @@ def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id:
                     continue
 
                 try:
-                    resume_parsed = parse_resume_for_recruiter(resume_text)
+                    resume_parsed = await parse_resume_for_recruiter(resume_text)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
                 try:
-                    comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
+                    comparison = await compare_job_and_resume(job_desc_parsed, resume_parsed)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue

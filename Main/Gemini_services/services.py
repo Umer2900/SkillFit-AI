@@ -48,7 +48,7 @@ def parse_job_description(job_description):
 
 
 # Function to parse resume text for Recruiter (from Recruiter.py)
-def parse_resume_for_recruiter(resume_text):
+async def parse_resume_for_recruiter(resume_text):
     response = model.generate_content(
         f"""
             You are an expert resume analyst.
@@ -152,7 +152,7 @@ def parse_resume_for_candidate(resume_text):
 
 
 # Function to compare job description and resume (from Recruiter.py)
-def compare_job_and_resume(job_text, resume_text):
+async def compare_job_and_resume(job_text, resume_text):
     prompt = f"""
 You are an AI assistant designed to evaluate how well a candidate's resume matches a job description.
 
