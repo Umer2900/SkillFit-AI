@@ -42,7 +42,7 @@ def send_verification_email(email, code):
         return False
 
 # === MAIN ===
-def main():
+async def main():
     if st.session_state.user is None:
         # TITLE
         st.markdown("<h1 style='text-align:center; color:#1e40af; font-size:52px; font-weight:900;'>SkillFit AI</h1>", unsafe_allow_html=True)
@@ -126,7 +126,7 @@ def main():
     else:
         # LOGGED IN
         if st.session_state.user['user_type'] == "Recruiter":
-            recruiter_interface()
+            await recruiter_interface()
         else:
             candidate_interface()
 
