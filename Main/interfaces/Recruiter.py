@@ -31,7 +31,7 @@ def txt_to_text(txt_file) -> str:
 # ----------------------------------------------------------------------
 # BULK SCREENING (UNCHANGED)
 # ----------------------------------------------------------------------
-async def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
+def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, user_id: int):
     start_time = time.time()
     summary = []
     filtered_files = {}
@@ -64,15 +64,15 @@ async def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, us
                     continue
 
                 try:
-                    resume_parsed = await parse_resume_for_recruiter(resume_text)
-                    print(resume_parsed)
+                    resume_parsed = parse_resume_for_recruiter(resume_text)
+                    # print(resume_parsed)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
                 try:
-                    comparison = await compare_job_and_resume(job_desc_parsed, resume_parsed)
-                    print(comparison)
+                    comparison = compare_job_and_resume(job_desc_parsed, resume_parsed)
+                    # print(comparison)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
@@ -106,7 +106,7 @@ async def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, us
 # ----------------------------------------------------------------------
 # RECRUITER INTERFACE — BEAUTIFUL & PROFESSIONAL
 # ----------------------------------------------------------------------
-async def recruiter_interface():
+def recruiter_interface():
     # === SIDEBAR: SKILLFIT AI + USERNAME IN BLUE ===
     st.sidebar.markdown("""
     <h1 style='color: #1e40af; font-size: 28px; font-weight: 900; margin-bottom: 5px;'>
@@ -290,7 +290,7 @@ async def recruiter_interface():
                 st.error("ZIP file required.")
             else:
                 with st.spinner("Screening resumes..."):
-                    filtered_zip, summary = await screen_bulk_resumes_with_jd(
+                    filtered_zip, summary = screen_bulk_resumes_with_jd(
                         zip_file.read(), job_description, st.session_state.user['id']
                     )
                 st.session_state.bulk_results = {"filtered_zip": filtered_zip, "summary": summary}
