@@ -65,12 +65,14 @@ async def screen_bulk_resumes_with_jd(zip_bytes: bytes, job_description: str, us
 
                 try:
                     resume_parsed = await parse_resume_for_recruiter(resume_text)
+                    print(resume_parsed)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
 
                 try:
                     comparison = await compare_job_and_resume(job_desc_parsed, resume_parsed)
+                    print(comparison)
                 except Exception:
                     summary.append({"filename": file_name, "rating": "Error", "status": "Failed"})
                     continue
