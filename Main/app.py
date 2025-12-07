@@ -8,6 +8,7 @@ import random
 import string
 import smtplib
 from email.mime.text import MIMEText
+import asyncio
 
 init_db()
 
@@ -131,4 +132,5 @@ async def main():
             candidate_interface()
 
 if __name__ == "__main__":
-    main()
+    # main()
+    asyncio.run(main())
