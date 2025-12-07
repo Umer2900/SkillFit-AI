@@ -12,7 +12,7 @@ GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]           # REPLACEMENT CODE (for 
 
 # Configure Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.0-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 # Function to parse job description (from Recruiter.py)
