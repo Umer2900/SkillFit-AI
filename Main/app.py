@@ -132,3 +132,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+## cd "D:\3. Code\Main" 
+## RUN:  streamlit run app.py       

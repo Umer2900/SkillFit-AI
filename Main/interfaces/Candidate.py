@@ -1,11 +1,11 @@
-import streamlit as st
-import pandas as pd
 import os
 import PyPDF2
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from Gemini_services.services import parse_resume_for_candidate
+import pandas as pd
+import streamlit as st
 from database import delete_account
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+from Gemini_services.services import parse_resume_for_candidate
 
 # === PATH SETUP ===
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -1,20 +1,16 @@
-from supabase import create_client, Client
-from datetime import datetime
-import os
-from dotenv import load_dotenv
 import time
 import logging
+import streamlit as st
+from datetime import datetime
+from supabase import create_client, Client
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from Streamlit secrets
-load_dotenv()
-
-# Initialize Supabase client using secrets
-url = os.environ.get("SUPABASE_URL", "https://tzjrpockqmevrcfqxmuw.supabase.co")
-key = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6anJwb2NrcW1ldnJjZnF4bXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1ODE2MjYsImV4cCI6MjA3NjE1NzYyNn0.QFUjG7-JW_w9DoJ2G8JQg2fLUZdmHcl1W4rUs6EsdtU")
+# Initialize Supabase client using env
+url = st.secrets["supabase"]["url"]
+key = st.secrets["supabase"]["key"]
 supabase: Client = create_client(url, key)
 
 def init_db():
