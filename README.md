@@ -123,7 +123,9 @@ SkillFit-AI/<br>
 │   │   ├── job_descriptions.csv<br>
 │   │   └── WebScrapping.ipynb<br>
 │   │<br>
-│   ├── .env  <br>
+│   ├── .streamlit/  <br>
+│   │   └── secrets.toml <br>
+│   │<br>
 │   ├── .gitignore <br>
 │   ├── app.py  <br>
 │   ├── auth.py <br>
@@ -157,21 +159,14 @@ To run SkillFit AI locally, ensure you have the following installed:
    cd SkillFit-AI
    ```
 
-
-2. **Set Up a Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install Dependencies**:
+2. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Configure Environment Variables**:
+3. **Configure Streamlit Secret Variables**:
 
-   Create a `.env` file in the project root and add the following:
+   Create a `secrets.toml` file in the project root and add the following:
    ```plaintext
    GMAIL_USER=your-email@gmail.com
    GMAIL_APP_PASSWORD=your-app-password
@@ -192,5 +187,3 @@ To run SkillFit AI locally, ensure you have the following installed:
    The app will be available at `http://localhost:8501`.
 
 <br>
-
-
