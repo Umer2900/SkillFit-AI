@@ -2,11 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 
 
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]        
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]  
 
 # Configure Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")     # FREE
+# model = genai.GenerativeModel("gemini-2.0-flash")       # Paid
 
 
 # Function to parse job description (from Recruiter.py)
