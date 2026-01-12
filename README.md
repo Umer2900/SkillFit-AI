@@ -1,10 +1,19 @@
 # SkillFit AI
 **AI-Powered Resume Screening & Job Matching Platform**
 
-[**Live Demo**](https://skillfit-ai.streamlit.app/)
+<!-- [**Live Demo**](https://skillfit-ai.streamlit.app/) -->
 
 SkillFit AI is a Streamlit-based web application designed to streamline the recruitment process by leveraging AI to match skills to job requirements. It offers two primary interfaces: one for recruiters to analyze candidate resumes against job descriptions, and another for candidates to find job recommendations based on their resumes. Powered by the Gemini API, SkillFit AI provides intelligent parsing, comparison, and feedback to ensure the best skill-to-job fit.
 <br>
+
+---
+
+## 🎥 Demo
+
+![Candidate Side Demo](Main/assets/Demo1.gif)
+
+---
+
 
 ## Table of Contents
 - [Why SkillFit AI Exists](#exists)
