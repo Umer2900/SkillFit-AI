@@ -8,7 +8,7 @@ SkillFit AI is a Streamlit-based web application designed to streamline the recr
 
 ---
 
-## 🎥 Demo
+## 🎥 Candidate Side Demo
 
 ![Candidate Side Demo](Main/assets/Demo1.gif)
 
