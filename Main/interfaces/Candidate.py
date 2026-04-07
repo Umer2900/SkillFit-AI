@@ -1,7 +1,10 @@
 import os
+import json
+import numpy as np
 import PyPDF2
 import pandas as pd
 import streamlit as st
+
 from database import delete_account
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -9,15 +12,13 @@ from Gemini_services.services import parse_resume_for_candidate
 
 # === PATH SETUP ===
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "job_descriptions.csv")
+CSV_PATH = os.path.join(BASE_DIR, "Web_Scrapping", "cleaned_job_descriptions.csv")
+
 df = pd.read_csv(CSV_PATH)
 df.fillna("", inplace=True)
 
-# Boost experience + combine features
-df['job_description'] = (
-    df['Experience'] + ' ' + df['Experience'] + ' ' + df['Experience'] + ' ' +
-    df['Skills'] + ' ' + df['JobRole']
-)
+# Ensure Experience is numeric
+df['Experience'] = pd.to_numeric(df['Experience'], errors='coerce').fillna(0)
 
 # === PDF TO TEXT ===
 def pdf_to_text(file):
@@ -26,6 +27,7 @@ def pdf_to_text(file):
     for page in reader.pages:
         text += page.extract_text() or ""
     return text
+
 
 # === CANDIDATE INTERFACE — BEAUTIFUL & POWERFUL ===
 def candidate_interface():
@@ -46,7 +48,7 @@ def candidate_interface():
     menu = ["Homepage", "Job Recommendation", "More"]
     choice = st.sidebar.selectbox("Menu", menu, label_visibility="collapsed")
 
-    # === HOMEPAGE — REDESIGNED TO INSPIRE ===
+    # === HOMEPAGE ===
     if choice == "Homepage":
         st.markdown("""
         <h1 style='text-align: center; color: #1e40af; font-size: 48px; font-weight: 900;'>
@@ -116,7 +118,7 @@ def candidate_interface():
         </p>
         """, unsafe_allow_html=True)
 
-    # === JOB RECOMMENDATION — PREMIUM LOOK ===
+    # === JOB RECOMMENDATION ===
     elif choice == "Job Recommendation":
         st.markdown("<h1 style='color: #1e40af; text-align: center;'>Job Recommendation</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; font-size: 18px; color: #555;'>Upload your resume → Get your <strong>top 5 perfect jobs</strong> instantly.</p>", unsafe_allow_html=True)
@@ -124,53 +126,104 @@ def candidate_interface():
 
         uploaded_file = st.file_uploader("Upload Your Resume (PDF)", type=['pdf'], help="We only read it once — never stored")
 
+        # Session state caching
+        if 'parsed_resume' not in st.session_state:
+            st.session_state.parsed_resume = None
+        if 'last_file_name' not in st.session_state:
+            st.session_state.last_file_name = None
+
+        
         if uploaded_file is not None:
-            with st.spinner("AI is reading your resume..."):
-                resume_text = pdf_to_text(uploaded_file)
-                try:
-                    parsed_resume = parse_resume_for_candidate(resume_text)
-                    st.success("Resume analyzed successfully!")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-                    parsed_resume = ""
 
+            # Only call LLM if new file
+            if st.session_state.last_file_name != uploaded_file.name:
+                with st.spinner("AI is reading your resume..."):
+                    resume_text = pdf_to_text(uploaded_file)
+                    try:
+                        st.session_state.parsed_resume = parse_resume_for_candidate(resume_text)
+                        st.session_state.last_file_name = uploaded_file.name
+                        st.success("Resume analyzed successfully!")
+                    except Exception as e:
+                        st.error(e)
+                        st.session_state.parsed_resume = None
+            
             if st.button("Find My Perfect Jobs", use_container_width=True, type="primary"):
-                if parsed_resume.strip():
-                    with st.spinner("Finding jobs that match YOU..."):
-                        vectorizer = TfidfVectorizer()
-                        job_vectors = vectorizer.fit_transform(df['job_description'])
-                        resume_vector = vectorizer.transform([parsed_resume])
-                        similarity = cosine_similarity(resume_vector, job_vectors)
-                        top_indices = similarity[0].argsort()[-5:][::-1]
-                        top_jobs = df.iloc[top_indices][['CompanyName', 'JobRole', 'Experience', 'Skills', 'Links']].copy()
 
-                        def make_apply_button(link):
-                            return f'<a href="{link}" target="_blank"><button style="background:#1e40af; color:white; padding:10px 20px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Apply Now</button></a>'
+                parsed_resume = st.session_state.parsed_resume
 
-                        top_jobs['Apply'] = top_jobs['Links'].apply(make_apply_button)
-                        top_jobs = top_jobs.drop(columns=['Links'])
-                        top_jobs.index = [f"#{i+1}" for i in range(len(top_jobs))]
+                if parsed_resume:
 
-                        st.markdown("### Your Top 5 Perfect Jobs")
-                        st.markdown(top_jobs.to_html(escape=False, index=True), unsafe_allow_html=True)
-                        st.balloons()
+                    # === Convert LLM output → dict → DataFrame ===
+                    parsed_resume_dict = json.loads(parsed_resume)
+                    resume_df = pd.DataFrame([parsed_resume_dict])
+
+                    # Skills similarity
+                    vectorizer = TfidfVectorizer(stop_words='english')
+                    skills_matrix = vectorizer.fit_transform(
+                         df['Skills'].astype(str).tolist() +
+                        resume_df['Skills'].astype(str).tolist()
+                    )
+
+                    cosine_skills = cosine_similarity(
+                        skills_matrix[-1],
+                        skills_matrix[:-1]
+                    ).flatten()
+
+                    # Experience similarity
+                    resume_exp = float(resume_df['Experience'].values[0])
+                    exp_diff = np.abs(df['Experience'] - resume_exp)
+                    cosine_exp = 1 / (1 + exp_diff)
+
+                    # Final score
+                    final_scores = 0.3 * cosine_skills + 0.7 * cosine_exp
+
+                    # =========================
+                    # 🔝 TOP JOBS
+                    # =========================
+                    top_indices = final_scores.argsort()[-5:][::-1]
+
+                    top_jobs = df.iloc[top_indices][
+                        ['CompanyName', 'JobRole', 'Experience', 'Skills', 'Links']
+                    ].copy()
+
+                    top_jobs['Final Score'] = final_scores[top_indices]
+
+                    # Apply button
+                    def make_apply_button(link):
+                        return f'<a href="{link}" target="_blank"><button style="background:#1e40af; color:white; padding:10px 20px; border:none; border-radius:8px;">Apply Now</button></a>'
+
+                    top_jobs['Apply'] = top_jobs['Links'].apply(make_apply_button)
+                    top_jobs = top_jobs.drop(columns=['Links'])
+
+                    top_jobs.index = [f"#{i+1}" for i in range(len(top_jobs))]
+
+                    st.markdown("### Your Top 5 Perfect Jobs")
+                    st.markdown(top_jobs.to_html(escape=False), unsafe_allow_html=True)
+                    st.balloons()
+
                 else:
                     st.warning("Please upload a valid resume.")
+                
 
     # === MORE OPTIONS ===
     elif choice == "More":
         st.markdown("<h1 style='color: #1e40af; text-align: center;'>More Options</h1>", unsafe_allow_html=True)
+
         col1, col2 = st.columns(2)
+
         with col1:
             if st.button("Logout", use_container_width=True):
                 st.session_state.user = None
                 st.session_state.page = 'login'
                 st.success("Logged out successfully!")
                 st.rerun()
+
         with col2:
-            if st.button("Delete Account", use_container_width=True, type="secondary"):
+            if st.button("Delete Account", use_container_width=True):
                 delete_account(st.session_state.user['id'])
                 st.session_state.user = None
                 st.session_state.page = 'login'
                 st.success("Account deleted.")
                 st.rerun()
+
+

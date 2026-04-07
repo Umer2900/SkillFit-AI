@@ -103,45 +103,44 @@ def parse_resume_for_candidate(resume_text):
         f"""
         You are an expert resume analyst.
 
-        From the candidate's resume text provided below, extract and return the following three fields:
+        From the candidate's resume text provided below, extract the following fields and return ONLY a valid JSON object.
 
-        1. JobRole
-        2. Experience (special format instructions, with extra importance)
-        3. Skills
+        Required fields:
+        1. Experience (IMPORTANT: numeric value in years)
+        2. Skills
 
-        **Important Instructions:**
-        - **JobRole**: Identify the main jobRole candidate wants to apply for.
-        - **Experience**: Calculate the total professional experience by adding all durations from different companies.
-          - Format the experience naturally:
-            - **First bullet**: Write only the total experience in plain format (e.g., "2 years 4 months" or "10 months").
-              - If more than 1 year: "X years Y months" (e.g., "2 years 4 months").
-              - If less than 1 year: only months (e.g., "10 months").
-        
-        - **Skills**: Extract and list the candidate's main skills normally.
-        - **Format the output as plain text** as shown below:
+        **Instructions:**
 
-          1. JobRole: (Mention the jobRole)
+        - **Experience**:
+          - Calculate total professional experience by summing all durations across companies.
+          - Convert the final experience into a **single numeric value in years**:
+              - Example: 6 months → 0.5
+              - Example: 1 year 6 months → 1.5
+              - Example: 2 years → 2.0
+          - Return ONLY a number (no text, no units).
 
-          2. Experience: (Mention the experience)
+        - **Skills**:
+          - Extract key technical skills.
+          - Return them as a **single space-separated string** (no commas, no bullets).
 
+        **Output Format (STRICT JSON ONLY):**
+        {{
+            "Experience": 0.5,
+            "Skills": "Python SQL Power BI Pandas NumPy Scikit-learn Machine Learning"
+        }}
 
-          3. Skills:
-          - (Skill 1)
-          - (Skill 2)
-          - (Skill 3)
-          - (Skill 4)
-          - (Skill 5)
-
-        - Add one blank line between each section.
-        - No extra commentary.
+        **Critical Rules:**
+        - Return ONLY raw JSON.
+        - DO NOT wrap the JSON in ``` or ```json.
+        - DO NOT include any markdown formatting.
+        - DO NOT add explanations, comments, or extra text.
+        - Output must start with {{ and end with }}.
 
         Resume Text:
         {resume_text}
         """
     )
     return response.text
-
-
 
 
 
